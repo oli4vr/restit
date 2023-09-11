@@ -1,4 +1,6 @@
 #!/bin/bash
+# restit installer script
+# by Olivier Van Rompuy
 if [ "$1" = "-u" ]
 then
  systemctl stop restit.service

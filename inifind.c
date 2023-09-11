@@ -1,3 +1,11 @@
+/* inifind.c
+Functions to work with ini-files of syntax
+[Section]
+Field = Value
+
+by Olivier Van Rompuy
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>

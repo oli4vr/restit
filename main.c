@@ -1,3 +1,10 @@
+/* main.c
+by Olivier Van Rompuy
+
+restit application main c file
+
+*/
+
 #include "main.h"
 #include "entropy.h"
 #include "inifind.h"

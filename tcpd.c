@@ -1,3 +1,7 @@
+/* TCP listener daemon functions
+   by Olivier Van Rompuy
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -10,6 +14,7 @@
 #include <inttypes.h>
 #include "tcpd.h"
 
+//Create a new TCP Server socket and start listening on the port
 int CreateTCPServerSocket(int port)
 {
  int sock;                        /* socket to create */
@@ -36,6 +41,7 @@ int CreateTCPServerSocket(int port)
  return sock;
 }
 
+//Accept an incoming TCP connection
 int AcceptTCPConnection(int servSock)
 {
  int clntSock;                    /* Socket descriptor for client */
@@ -54,6 +60,7 @@ int AcceptTCPConnection(int servSock)
  return clntSock;
 }
 
+//Main tcp daemon function
 void * tcpd_daemon(void *p) {
  int s,c;
  tcpcc *m;
