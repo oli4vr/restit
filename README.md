@@ -19,7 +19,9 @@ Category;Type;schedule_frequency_seconds;script_file;
 - Each line is a (sub)sensor.</pre>
 
 # Build the application and create the package bundle
-<pre>make
+<pre>git clone https://github.com/oli4vr/restit.git
+cd restit
+make
 make bundle</pre>
 
 # Cleanup
