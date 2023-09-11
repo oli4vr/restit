@@ -3,7 +3,7 @@ Turn simple command scripts into a custom rest api sensor.
 
 # Basic Workflow
 <pre>1. Git clone this source code.
-2. Create your set of scripts that output "Value String" for each line of output. (Each line is a separate sensor)
+2. Create your set of scripts that output "Value String" for each line of output.
 3. Edit main.csv using the syntax described below.
 4. Build the source code and the installer package
 5. Install your rest api sensor as root on each linux host that you want it to run on.
