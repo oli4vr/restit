@@ -11,7 +11,7 @@ then
 fi
 
 B64FOUND=0
-if (which base64b >/dev/null 2>&1)
+if (which base64 >/dev/null 2>&1)
 then
  B64FOUND=1
 fi
