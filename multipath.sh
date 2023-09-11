@@ -1,4 +1,5 @@
 #!/bin/bash
+# Tested on Ubuntu server and SLES
 export PCACHE=~/.restit/mpath
 mkdir -p ${PCACHE} 2>/dev/null
 multipath -ll 2>/dev/null | grep -v size | grep -v policy | grep -v ' sd' | awk '{print $1}' | while read pdev
@@ -15,4 +16,7 @@ do
  then
   mv ${PCACHE}/${pdev}.new ${PCACHE}/${pdev}
  fi
+done | grep -w 1 | wc -l | xargs echo | while read a 
+do
+ echo $a MULTIPATH_DEVICES_ERROR
 done 2>/dev/null
