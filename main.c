@@ -72,6 +72,7 @@ cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, un
 }
 
 void cleanup_manifesto() {
+//Free dynamically allocated memory
     int n=0;
     cmdsched ** cp=scheds;
     for(;n<MAX_SCHEDS;n++) {
@@ -82,6 +83,7 @@ void cleanup_manifesto() {
 }
 
 int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
+//Generate the manifesto vault files
     FILE * fp;
     int rc,n;
     unsigned char csvfile[MESSAGE_SIZE]={0};
@@ -120,7 +122,7 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     remove(dvault);
     rc=entropy_append(csvfile,"manifest.csv",securestr,dvault,16);
 
-    //Remove vault files
+    //Remove old vault files
     for(n=0;n<schedc;n++) {
         cp=scheds[n];
         remove(cp->vaultfile);
@@ -137,6 +139,7 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
 }
 
 int load_manifesto(unsigned char * spath) {
+//Load the manifesto
     FILE * fp;
     int rc,n;
     long int offset;
@@ -153,13 +156,11 @@ int load_manifesto(unsigned char * spath) {
     if (offset<0) return -1;
 
     buffer[MESSAGE_SIZE-1]=0;
-    //fprintf(stderr,"%s\n",buffer);
     
     scheds[schedc]=manifest_nextsched(&bp,spath,1);
     cp=scheds[schedc];
     schedc++;
     while (cp!=NULL) {
-        //print_cmdsched(cp);
         cp=scheds[schedc];
         scheds[schedc]=manifest_nextsched(&bp,spath,1);
         cp=scheds[schedc];
@@ -169,8 +170,6 @@ int load_manifesto(unsigned char * spath) {
 
     for(n=0;n<schedc;n++) {
         cp=scheds[n];
-        //print_cmdsched(cp);
-        //fprintf(stderr,"%s\n",cp->vaultfile);
     }
     return schedc;
 }
@@ -234,7 +233,6 @@ int buildjson(unsigned char * jsonout) {
     jsonpnt+=jsonpos;
     for(n=0;n<schedc;n++) {
      c=scheds[n];
-     //fprintf(stderr,"num results = %d\n",c->resultsnum);
      max=(c->resultsnum)-1;
      if (n>0 && c->resultsnum>0) {
       *jsonpnt=',';
@@ -245,7 +243,6 @@ int buildjson(unsigned char * jsonout) {
         sprintf(jsonpnt,"{\"%s\":{\"%s\":{\"%s\":\"%s\"}}}",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value);
         len=strnlen(jsonpnt,256);
         jsonpos+=len;
-        //fprintf(stderr,"DEBUG %d %s\n",len,jsonpnt);
         jsonpnt+=len;
         if (m!=max) {
             *jsonpnt=',';
@@ -266,6 +263,7 @@ int buildjson(unsigned char * jsonout) {
 }
 
 void * http_handler(void *p) {
+//Handle a single http request
  struct timeval tv;
  unsigned char out[4]={0};
  unsigned char buf[TCP_BUF_SIZE]={0};
@@ -281,9 +279,7 @@ void * http_handler(void *p) {
 
  pthread_detach(pthread_self());
  l=recv(m->sock, buf, TCP_BUF_SIZE, 0);
- //fprintf(stderr,"%s\n",buf);
  jsonlen=buildjson(jsonreply);
- //fprintf(stderr,"%s\n",jsonreply);
  send(m->sock, jsonreply, jsonlen, 0);
  close(m->sock);
  free(m);
@@ -365,7 +361,6 @@ int main(int argc, char ** argv) {
         fprintf(stderr,"Error loading manifesto\n");
         return -2;
     }
-    //fprintf(stderr,"RC=%d\n",rc);
 
     // Generate a separate scheduling thread for each configured cmdsched
     for(n=0;n<schedc;n++) {
@@ -375,9 +370,10 @@ int main(int argc, char ** argv) {
     }
 
     tcp_http.port=cfg.restport;
-    
     tcp_http.data=NULL;
     tcp_http.hand=http_handler;
+
+    // Start the tcp listener as a separate thread    
     pthread_create(&thr_http, NULL, tcpd_daemon, (void*) &tcp_http);
     pthread_detach(thr_http);
 

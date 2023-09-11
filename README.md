@@ -1,5 +1,5 @@
 # restit
-Turn simple command scripts into a custom rest api sensor.
+Turn simple command scripts into a custom json rest api sensor.
 
 # Basic Workflow
 <pre>1. Git clone this source code.
@@ -14,9 +14,9 @@ Category;Type;schedule_frequency_seconds;script_file;
 </pre>
 
 # Important rules
-<pre>- Script can be max 7900bytes long
-- Script must always output "VALUE STRING" per line.
-- Each line is a (sub)sensor.</pre>
+<pre>- Command scripts can be max 7900bytes long.
+- Command scripts must always output "VALUE STRING" per line.
+- Each line becomes a (sub)sensor and will have a separate entry in the json output.</pre>
 
 # Build the application and create the package bundle
 <pre>git clone https://github.com/oli4vr/restit.git
