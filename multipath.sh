@@ -19,4 +19,13 @@ do
 done | grep -w 1 | wc -l | xargs echo | while read a 
 do
  echo $a MULTIPATH_DEVICES_ERROR
+
+ if [ "$a" != 0 ]
+ then
+  for i in $(ls /sys/class/fc_host/host*/device/scsi_host/host*/scan)
+  do
+   echo '- - -' > $i
+  done
+ fi 2>/dev/null
+
 done 2>/dev/null
