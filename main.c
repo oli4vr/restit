@@ -269,12 +269,71 @@ int buildjson(unsigned char * jsonout) {
     return jsonpos;
 }
 
+int buildprtg(unsigned char * jsonout) {
+    int n,m,max,jsonpos=0,len;
+    unsigned char * jsonpnt=jsonout;
+    cmdsched * c;
+    // HTTP Header :
+    strncpy(jsonpnt,"HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"prtg\":{\"result\":[",256);
+    jsonpos+=strnlen(jsonpnt,256);
+    jsonpnt+=jsonpos;
+    for(n=0;n<schedc;n++) {
+     c=scheds[n];
+     max=(c->resultsnum)-1;
+     if (n>0 && c->resultsnum>0) {
+      *jsonpnt=',';
+       jsonpnt++;
+       jsonpos++;
+     }
+     for(m=0;m<(c->resultsnum);m++) {
+        sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\"}",c->results[m].result_string,c->results[m].result_value);
+        len=strnlen(jsonpnt,256);
+        jsonpos+=len;
+        jsonpnt+=len;
+        if (m!=max) {
+            *jsonpnt=',';
+            jsonpnt++;
+            jsonpos++;
+        }
+     }
+    }
+    
+    *jsonpnt=']';
+    jsonpnt++;
+    *jsonpnt='}';
+    jsonpnt++;
+    *jsonpnt='}';
+    jsonpnt++;
+    jsonpos+=3;
+    *jsonpnt=0;
+    
+    return jsonpos;
+}
+
+//Process the http header and determine method and path
+int str2httpreq(unsigned char * str, httpreq * request) {
+ unsigned char * cc=str;
+ unsigned char * c1, *c2;
+ int n=0,c=0;
+ if (request==NULL) return -1;
+ for(;n<TCP_BUF_SIZE && c<2;n++) {
+  if (*cc==' ') {*cc=0; c++; c2=c1; c1=cc+1;}
+  cc++;
+ }
+ 
+ strncpy(request->method,str,16);
+ strncpy(request->path,c2,512);
+
+ return 0;
+}
+
 void * http_handler(void *p) {
 //Handle a single http request
  struct timeval tv;
  unsigned char out[4]={0};
  unsigned char buf[TCP_BUF_SIZE]={0};
  unsigned char jsonreply[65535];
+ httpreq request;
  int jsonlen;
  int rc,l;
  tv.tv_sec=5;
@@ -286,8 +345,19 @@ void * http_handler(void *p) {
 
  pthread_detach(pthread_self());
  l=recv(m->sock, buf, TCP_BUF_SIZE, 0);
- jsonlen=buildjson(jsonreply);
- send(m->sock, jsonreply, jsonlen, 0);
+ str2httpreq(buf,&request);
+ if(strncmp(request.method,"GET",16)==0)
+ {
+  if (strncmp(request.path,"/test",512)==0) {
+   strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><pre>HTTP test request</pre></body></html>\n",256);
+   jsonlen=strnlen(jsonreply,256);
+  } else if (strncmp(request.path,"/prtg",512)==0) {
+   jsonlen=buildprtg(jsonreply); 
+  } else {
+   jsonlen=buildjson(jsonreply);
+  }
+  send(m->sock, jsonreply, jsonlen, 0);
+ }
  close(m->sock);
  free(m);
  m=NULL;

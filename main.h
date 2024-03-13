@@ -38,3 +38,7 @@ typedef struct _cfgmain {
  int restport;
 } cfgmain;
 
+typedef struct _httpreq {
+ unsigned char method[16];
+ unsigned char path[512];
+} httpreq;
