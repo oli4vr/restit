@@ -19,6 +19,7 @@ unsigned char securestr[]="7a`y%w6evZ_30fPlkXpTBDKp]?TFvoQ[AG}mt7|;U5e32lShqAPE8
 typedef struct _result_record {
  unsigned char result_string[256];
  unsigned char result_value[32];
+ unsigned char result_message[256];
 } result_record;
 
 // Struct for a command schedule entry (1 sensor)

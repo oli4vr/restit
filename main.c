@@ -185,8 +185,8 @@ int exec_sched(cmdsched * c) {
     int rc;
     unsigned char buffer[MESSAGE_SIZE+1]={0};
     unsigned char *sp=buffer;
-    unsigned char neof=1;
-    unsigned char *rcstr, *outstr;
+    unsigned char neof=1,nomsg=1;
+    unsigned char *rcstr, *outstr, *outmsg;
 
     FILE * pipe;
 
@@ -198,14 +198,19 @@ int exec_sched(cmdsched * c) {
     while (neof) {
         rcstr=sp;
         while (*sp!=' ') {if (*sp==0) return 0; sp++;}
+        outmsg=sp;
         *sp=0; sp++;
         outstr=sp;
-        while (*sp!=10 && *sp!=0) {sp++;}
+        while (*sp!=10 && *sp!=0) {
+            if (*sp==' ' && nomsg) {*sp=0;sp++;outmsg=sp;nomsg=0;}
+            else {sp++;}
+        }
         if (*sp==0) neof=0;
         *sp=0; sp++;
 
         strncpy(c->results[c->resultsnum].result_string,outstr,256);
         strncpy(c->results[c->resultsnum].result_value,rcstr,32);
+        strncpy(c->results[c->resultsnum].result_message,outmsg,256);
         c->resultsnum++;
     }
     return (rc);
@@ -247,7 +252,7 @@ int buildjson(unsigned char * jsonout) {
        jsonpos++;
      }
      for(m=0;m<(c->resultsnum);m++) {
-        sprintf(jsonpnt,"{\"%s\":{\"%s\":{\"%s\":\"%s\"}}}",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value);
+        sprintf(jsonpnt,"{\"%s\":{\"%s\":{\"%s\":\"%s\",\"Message\":\"%s\"}}}",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
         len=strnlen(jsonpnt,256);
         jsonpos+=len;
         jsonpnt+=len;
@@ -297,14 +302,10 @@ int buildprtg(unsigned char * jsonout) {
         }
      }
     }
-    
-    *jsonpnt=']';
-    jsonpnt++;
-    *jsonpnt='}';
-    jsonpnt++;
-    *jsonpnt='}';
-    jsonpnt++;
-    jsonpos+=3;
+    if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",c->results[m-1].result_message);}
+    else {sprintf(jsonpnt,"]}}");}
+    jsonpos+=strnlen(jsonpnt,256);
+    jsonpnt+=strnlen(jsonpnt,256);
     *jsonpnt=0;
     
     return jsonpos;
