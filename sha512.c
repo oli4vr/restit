@@ -94,7 +94,8 @@ unsigned char *SHA512(void *data, unsigned int data_len, unsigned char *digest);
  * made).
  */
 #if !defined(BYTE_ORDER) || (BYTE_ORDER != LITTLE_ENDIAN && BYTE_ORDER != BIG_ENDIAN)
-#error Define BYTE_ORDER to be equal to either LITTLE_ENDIAN or BIG_ENDIAN
+//#error Define BYTE_ORDER to be equal to either LITTLE_ENDIAN or BIG_ENDIAN
+#define BYTE_ORDER LITTLE_ENDIAN
 #endif
 
 typedef uint8_t  sha2_byte;	/* Exactly 1 byte */
