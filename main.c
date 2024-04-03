@@ -195,7 +195,7 @@ int exec_sched(cmdsched * c) {
     rc=fread(buffer,1,MESSAGE_SIZE,pipe);
     pclose(pipe);
     c->resultsnum=0;
-    while (neof) {
+    while (neof && c->resultsnum<MAX_RESULTS) {
         rcstr=sp;
         while (*sp!=' ') {if (*sp==0) return 0; sp++;}
         outmsg=sp;

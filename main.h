@@ -14,6 +14,8 @@
 #define MAX_SCHEDS 1024
 #define MAX_SCHEDN 1023
 
+#define MAX_RESULTS 1024
+
 unsigned char securestr[]="7a`y%w6evZ_30fPlkXpTBDKp]?TFvoQ[AG}mt7|;U5e32lShqAPE8.B$%7{lyD]";
 
 // Results are stored in a struct with 2 strings : string & value
@@ -29,7 +31,7 @@ typedef struct _cmdsched {
  unsigned char vaultfile[256];
  unsigned char keystring[256];
  unsigned char commands[8127];
- result_record results[256];
+ result_record results[MAX_RESULTS];
  unsigned char resultsnum;
  uint32_t seconds;
  pthread_t thread;
