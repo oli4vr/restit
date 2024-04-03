@@ -9,6 +9,7 @@
 #include <pwd.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <sys/time.h>
 
 #define MAX_SCHEDS 1024
 #define MAX_SCHEDN 1023
@@ -42,4 +43,14 @@ typedef struct _cfgmain {
 typedef struct _httpreq {
  unsigned char method[16];
  unsigned char path[512];
+ unsigned char sitem1[64];
+ unsigned char sitem2[64];
+ unsigned char sitem3[64];
+ float warnhigh;
+ float warnlow;
+ float crithigh;
+ float critlow;
+ unsigned char warnon[64];
+ unsigned char criton[64];
+ unsigned char limitmode;
 } httpreq;

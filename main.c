@@ -235,9 +235,9 @@ void * cmdthread(void * data) {
     }
 }
 
-int buildjson(unsigned char * jsonout) {
+int buildjson(unsigned char * jsonout,httpreq *request) {
     int n,m,max,jsonpos=0,len;
-    unsigned char * jsonpnt=jsonout;
+    unsigned char * jsonpnt=jsonout,comma=0;
     cmdsched * c;
     // HTTP Header :
     strncpy(jsonpnt,"HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"restit\":{\"results\":[",128);
@@ -246,23 +246,31 @@ int buildjson(unsigned char * jsonout) {
     for(n=0;n<schedc;n++) {
      c=scheds[n];
      max=(c->resultsnum)-1;
-     if (n>0 && c->resultsnum>0) {
+     //if (n>0 && c->resultsnum>0) {
+/*     if (comma) {
       *jsonpnt=',';
        jsonpnt++;
        jsonpos++;
-     }
+     }*/
      for(m=0;m<(c->resultsnum);m++) {
-        sprintf(jsonpnt,"{\"%s\":{\"%s\":{\"%s\":\"%s\",\"Message\":\"%s\"}}}",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
-        len=strnlen(jsonpnt,256);
-        jsonpos+=len;
-        jsonpnt+=len;
-        if (m!=max) {
+        if (*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) {
+         if (comma) {
             *jsonpnt=',';
             jsonpnt++;
             jsonpos++;
+         }
+         comma=1;
+         sprintf(jsonpnt,"{\"%s\":{\"%s\":{\"%s\":\"%s\",\"Message\":\"%s\"}}}",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
+         len=strnlen(jsonpnt,256);
+         jsonpos+=len;
+         jsonpnt+=len;
         }
+
      }
     }
+    jsonpnt--;
+    if (*jsonpnt!=',') {jsonpnt++;}
+
     *jsonpnt=']';
     jsonpnt++;
     *jsonpnt='}';
@@ -274,47 +282,126 @@ int buildjson(unsigned char * jsonout) {
     return jsonpos;
 }
 
-int buildprtg(unsigned char * jsonout) {
+unsigned char valuetypecheck(unsigned char *s) {
+ unsigned char *c=s;
+ unsigned char val=1;
+ unsigned char dot=0;
+ int n=0,l=strnlen(s,16);
+
+ if (*c=='-') {c++;}
+ for(;n<l&&val;n++) {
+  if (*c=='.') {dot++;}
+  else if (*c<'0' && *c>'9') {val=0;}
+  c++;
+ }
+ if (val==1 && dot==1) {val=2;}
+ if (dot>1) {val=0;}
+
+ return val;
+}
+
+int buildprtg(unsigned char * jsonout,httpreq *request) {
     int n,m,max,jsonpos=0,len;
-    unsigned char * jsonpnt=jsonout;
+    unsigned valtype;
+    unsigned char * jsonpnt=jsonout,comma=0;
     cmdsched * c;
     // HTTP Header :
     strncpy(jsonpnt,"HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"prtg\":{\"result\":[",256);
     jsonpos+=strnlen(jsonpnt,256);
     jsonpnt+=jsonpos;
+    comma=0;
     for(n=0;n<schedc;n++) {
      c=scheds[n];
      max=(c->resultsnum)-1;
-     if (n>0 && c->resultsnum>0) {
+     //if (n>0 && c->resultsnum>0) {
+/*     if (comma) {
       *jsonpnt=',';
        jsonpnt++;
        jsonpos++;
-     }
+     }*/
      for(m=0;m<(c->resultsnum);m++) {
-        sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\"}",c->results[m].result_string,c->results[m].result_value);
-        len=strnlen(jsonpnt,256);
-        jsonpos+=len;
-        jsonpnt+=len;
-        if (m!=max) {
+        if (*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) {
+         if (comma) {
             *jsonpnt=',';
             jsonpnt++;
             jsonpos++;
+         }
+	 comma=1;
+	 valtype=valuetypecheck(c->results[m].result_value);
+	 if (valtype==2) {
+           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\"",c->results[m].result_string,atof(c->results[m].result_value));
+
+	 } else {
+           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\"",c->results[m].result_string,c->results[m].result_value);
+	 }
+         len=strnlen(jsonpnt,256);
+         jsonpos+=len;
+         jsonpnt+=len;
+         if (request->limitmode) {
+	   if (valtype==2) {
+             sprintf(jsonpnt,",\"float\":\"1\"");
+             len=strnlen(jsonpnt,256);
+             jsonpos+=len;
+             jsonpnt+=len;
+	   }
+           sprintf(jsonpnt,",\"limitmode\":\"1\"");
+           len=strnlen(jsonpnt,256);
+           jsonpos+=len;
+           jsonpnt+=len;
+	   if (request->warnhigh<9999999999999) {
+	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.02f\"",request->warnhigh); }
+	     else {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.00f\"",request->warnhigh);}
+             len=strnlen(jsonpnt,256);
+             jsonpos+=len;
+             jsonpnt+=len;
+	   }
+	   if (request->crithigh<9999999999999) {
+	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.02f\"",request->crithigh); }
+	     else {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.00f\"",request->crithigh);}
+             len=strnlen(jsonpnt,256);
+             jsonpos+=len;
+             jsonpnt+=len;
+	   }
+	   if (request->warnlow>-9999999999999) {
+	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.02f\"",request->warnlow); }
+	     else {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.00f\"",request->warnlow);}
+             len=strnlen(jsonpnt,256);
+             jsonpos+=len;
+             jsonpnt+=len;
+	   }
+	   if (request->critlow>-9999999999999) {
+	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinError\":\"%0.02f\"",request->critlow); }
+	     else {sprintf(jsonpnt,",\"LimitMinError\":\"%0.00f\"",request->critlow);}
+             len=strnlen(jsonpnt,256);
+             jsonpos+=len;
+             jsonpnt+=len;
+	   }
+	 }
+
+	 *jsonpnt='}';
+	 jsonpnt++;
+	 jsonpos++;
         }
      }
     }
+    jsonpnt--;
+    if (*jsonpnt!=',') {jsonpnt++;}
+
     if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",c->results[m-1].result_message);}
     else {sprintf(jsonpnt,"]}}");}
     jsonpos+=strnlen(jsonpnt,256);
     jsonpnt+=strnlen(jsonpnt,256);
     *jsonpnt=0;
-    
     return jsonpos;
 }
 
 //Process the http header and determine method and path
 int str2httpreq(unsigned char * str, httpreq * request) {
  unsigned char * cc=str;
- unsigned char * c1, *c2;
+ unsigned char *c1, *c2, *c3;
+ unsigned char *vars;
+ unsigned char tmp[512]={0};
+ unsigned char skipval=0;
  int n=0,c=0;
  if (request==NULL) return -1;
  for(;n<TCP_BUF_SIZE && c<2;n++) {
@@ -324,6 +411,81 @@ int str2httpreq(unsigned char * str, httpreq * request) {
  
  strncpy(request->method,str,16);
  strncpy(request->path,c2,512);
+
+ strncpy(tmp,c2,512);
+
+ // In case there is a ? character, split the string.
+ cc=tmp;
+ n=0;
+ while (n<511 && *cc!='?' && *cc!=0) {cc++;n++;}
+ vars=cc+(*cc=='?');
+ *cc=0;
+
+ // Process vars, if applicable
+ request->warnhigh=9999999999999;
+ request->warnlow=-9999999999999;
+ request->crithigh=9999999999999;
+ request->critlow=-9999999999999;
+ request->warnon[0]=0;
+ request->criton[0]=0;
+ request->limitmode=0;
+ if (*vars) {
+  cc=vars;
+  n=0;
+  while (*cc!=0 && n<300) {
+   c1=cc;
+   while (n<300 && *cc!='=' && *cc!='&' && *cc!=0) {cc++;n++;}
+   if (*cc=='=')  {
+    *cc=0;
+    cc++;
+    c2=cc;
+    while (n<300 && *cc!='&' && *cc!=0) {cc++;n++;}
+    *cc=0;
+    cc++;
+   } else {
+    *cc=0;
+    c2=cc;
+    cc++;
+   }
+   if (strncmp(c1,"warnhigh",16)==0) {
+     request->warnhigh=atof(c2);
+     request->limitmode=1;
+   } else if (strncmp(c1,"warnlow",16)==0) {
+     request->warnlow=atof(c2);
+     request->limitmode=1;
+   } else if (strncmp(c1,"crithigh",16)==0) {
+     request->crithigh=atof(c2);
+     request->limitmode=1;
+   } else if (strncmp(c1,"critlow",16)==0) {
+     request->critlow=atof(c2);
+     request->limitmode=1;
+   } else if (strncmp(c1,"warnon",16)==0) {
+     strncpy(request->warnon,c2,64);
+     request->warnon[63]=0;
+   } else if (strncmp(c1,"criton",16)==0) {
+     strncpy(request->criton,c2,64);
+     request->warnon[63]=0;
+   }
+  }
+  if (request->warnhigh>999999999999) {request->warnhigh=request->crithigh;}
+  if (request->warnlow<-999999999999) {request->warnlow=request->critlow;}
+ }
+
+ // Process the path and get subitem 1/2/3
+ cc=tmp;
+ n=0;
+ if (*cc == '/') {cc++;n++;}
+ c1=cc;
+ while (n<511 && *cc!='/' && *cc!=0) {cc++;n++;}
+ *cc=0;cc++;c2=cc;
+ while (n<511 && *cc!='/' && *cc!=0) {cc++;n++;}
+ *cc=0;cc++;c3=cc;
+ while (n<511 && *cc!='/' && *cc!=0) {cc++;n++;}
+ *cc=0;
+
+ strncpy(request->sitem1,c1,32);request->sitem1[31]=0;
+ strncpy(request->sitem2,c2,32);request->sitem2[31]=0;
+ strncpy(request->sitem3,c3,32);request->sitem3[31]=0;
 
  return 0;
 }
@@ -349,13 +511,13 @@ void * http_handler(void *p) {
  str2httpreq(buf,&request);
  if(strncmp(request.method,"GET",16)==0)
  {
-  if (strncmp(request.path,"/test",512)==0) {
+  if (strncmp(request.sitem1,"test",4)==0) {
    strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><pre>HTTP test request</pre></body></html>\n",256);
    jsonlen=strnlen(jsonreply,256);
-  } else if (strncmp(request.path,"/prtg",512)==0) {
-   jsonlen=buildprtg(jsonreply); 
+  } else if (strncmp(request.sitem1,"prtg",4)==0) {
+   jsonlen=buildprtg(jsonreply,&request); 
   } else {
-   jsonlen=buildjson(jsonreply);
+   jsonlen=buildjson(jsonreply,&request);
   }
   send(m->sock, jsonreply, jsonlen, 0);
  }
