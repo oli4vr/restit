@@ -54,13 +54,15 @@ The following formatting is supported :
 
 # Filter/request specific sensors
 You can request either a specific category, type or sensor by adding using it's name in the URL path. Searches work for all formats.
-Example : http://127.0.0.1:40480/prtg/fs_used
+
+<br />Example : http://127.0.0.1:40480/prtg/fs_used
 
 # Add (prtg compatible) thresholds to the reply
 4 Variables are available :
 - crithigh : Critical high threshold
 - warnhigh : Warning high threshold
-- critlow  : Critical low threshold
-- warnlow  : Warning low threshold
-Example : http://127.0.0.1:40480/prtg/fs_used?crithigh=90&warnhigh=80
+- critlow : Critical low threshold
+- warnlow : Warning low threshold
+
+<br />Example : http://127.0.0.1:40480/prtg/fs_used?crithigh=90&warnhigh=80
 
