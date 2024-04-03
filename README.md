@@ -3,7 +3,7 @@ Turn simple command scripts into a custom json rest api sensor.
 
 # Basic Workflow
 <pre>1. Git clone this source code.
-2. Create your set of scripts that output "Value String" for each line of output.
+2. Create your set of scripts that output "Value Sensorname Optional_Message" for each line of output.
 3. Edit main.csv using the syntax described below.
 4. Build the source code and the installer package
 5. Install your rest api sensor as root on each linux host that you want it to run on.
@@ -15,7 +15,7 @@ Category;Type;schedule_frequency_seconds;script_file;
 
 # Important rules
 <pre>- Command scripts can be max 7900bytes long.
-- Command scripts must always output "VALUE STRING" per line.
+- Command scripts must always output "VALUE SENSORNAME OPTIONAL_MESSAGE" per line.
 - Each line becomes a (sub)sensor and will have a separate entry in the json output.</pre>
 
 # Build the application and create the package bundle
@@ -46,4 +46,21 @@ By default the rest api will be listening on port 40480, but this can be adapted
 You can connect to it using the http protocol.
 
 <br />curl http://127.0.0.1:40480
+
+# JSON formats
+The following formatting is supported :
+- Restit JSON format : http://127.0.0.1:40480/json    -> Default format
+- Native PRTG format : http://127.0.0.1:40480/prtg
+
+# Filter/request specific sensors
+You can request either a specific category, type or sensor by adding using it's name in the URL path. Searches work for all formats.
+Example : http://127.0.0.1:40480/prtg/fs_used
+
+# Add (prtg compatible) thresholds to the reply
+4 Variables are available :
+- crithigh : Critical high threshold
+- warnhigh : Warning high threshold
+- critlow  : Critical low threshold
+- warnlow  : Warning low threshold
+Example : http://127.0.0.1:40480/prtg/fs_used?crithigh=90&warnhigh=80
 
