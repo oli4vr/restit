@@ -48,6 +48,7 @@ typedef struct _httpreq {
  unsigned char sitem1[64];
  unsigned char sitem2[64];
  unsigned char sitem3[64];
+ unsigned char search[64];
  float warnhigh;
  float warnlow;
  float crithigh;

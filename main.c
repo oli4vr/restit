@@ -108,7 +108,6 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     rc=fread(buffer,1,MESSAGE_SIZE,fp);
     fclose(fp);
 
-    //fprintf(stderr,"%s\n",buffer);
     if (rc<1) return -2;
     buffer[MESSAGE_SIZE-1]=0;
     
@@ -138,7 +137,6 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     //Appending entries to vault files
     for(n=0;n<schedc;n++) {
         cp=scheds[n];
-        //fprintf(stderr,"Appending %s %s \n",cp->vaultfile,cp->keystring);
         if (cp!=NULL)
             rc=entropy_append(cp->commands,cp->keystring,securestr,cp->vaultfile,2); 
     }
@@ -246,14 +244,8 @@ int buildjson(unsigned char * jsonout,httpreq *request) {
     for(n=0;n<schedc;n++) {
      c=scheds[n];
      max=(c->resultsnum)-1;
-     //if (n>0 && c->resultsnum>0) {
-/*     if (comma) {
-      *jsonpnt=',';
-       jsonpnt++;
-       jsonpos++;
-     }*/
      for(m=0;m<(c->resultsnum);m++) {
-        if (*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) {
+     if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
          if (comma) {
             *jsonpnt=',';
             jsonpnt++;
@@ -313,14 +305,8 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
     for(n=0;n<schedc;n++) {
      c=scheds[n];
      max=(c->resultsnum)-1;
-     //if (n>0 && c->resultsnum>0) {
-/*     if (comma) {
-      *jsonpnt=',';
-       jsonpnt++;
-       jsonpos++;
-     }*/
      for(m=0;m<(c->resultsnum);m++) {
-        if (*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) {
+     if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
          if (comma) {
             *jsonpnt=',';
             jsonpnt++;
@@ -428,6 +414,7 @@ int str2httpreq(unsigned char * str, httpreq * request) {
  request->critlow=-9999999999999;
  request->warnon[0]=0;
  request->criton[0]=0;
+ request->search[0]=0;
  request->limitmode=0;
  if (*vars) {
   cc=vars;
@@ -465,6 +452,9 @@ int str2httpreq(unsigned char * str, httpreq * request) {
    } else if (strncmp(c1,"criton",16)==0) {
      strncpy(request->criton,c2,64);
      request->warnon[63]=0;
+   } else if (strncmp(c1,"search",16)==0) {
+     strncpy(request->search,c2,64);
+     request->search[63]=0;
    }
   }
   if (request->warnhigh>999999999999) {request->warnhigh=request->crithigh;}
@@ -472,6 +462,10 @@ int str2httpreq(unsigned char * str, httpreq * request) {
  }
 
  // Process the path and get subitem 1/2/3
+ request->sitem1[0]=0;
+ request->sitem2[0]=0;
+ request->sitem3[0]=0;
+
  cc=tmp;
  n=0;
  if (*cc == '/') {cc++;n++;}
