@@ -48,12 +48,12 @@ You can connect to it using the http protocol.
 <br />curl http://127.0.0.1:40480
 
 # JSON formats
-The following formatting is supported :
+The following formats are available :
 - Restit JSON format : http://127.0.0.1:40480/json    -> Default format
-- Native PRTG format : http://127.0.0.1:40480/prtg
+- Native PRTG format : http://127.0.0.1:40480/prtg    -> PRTG "HTTP Data Advanced"
 
 # Filter/request specific sensors
-You can request either a specific category, type or sensor by adding using it's name in the URL path. Searches work for all formats.
+You can filter a specific category, type or sensor by using it's name in the URL path. Searches work for all formats.
 
 <br />Example : http://127.0.0.1:40480/prtg/fs_used
 
