@@ -32,7 +32,7 @@ typedef struct _cmdsched {
  unsigned char keystring[256];
  unsigned char commands[8127];
  result_record results[MAX_RESULTS];
- unsigned char resultsnum;
+ unsigned int resultsnum;
  uint32_t seconds;
  pthread_t thread;
 } cmdsched;
@@ -53,6 +53,8 @@ typedef struct _httpreq {
  float warnlow;
  float crithigh;
  float critlow;
+ float maxval;
+ float minval;
  unsigned char warnon[64];
  unsigned char criton[64];
  unsigned char limitmode;

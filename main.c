@@ -181,7 +181,8 @@ int load_manifesto(unsigned char * spath) {
 
 int exec_sched(cmdsched * c) {
     int rc;
-    unsigned char buffer[MESSAGE_SIZE+1]={0};
+    //unsigned char buffer[MESSAGE_SIZE+1]={0};
+    unsigned char buffer[65535]={0};
     unsigned char *sp=buffer;
     unsigned char neof=1,nomsg=1;
     unsigned char *rcstr, *outstr, *outmsg;
@@ -233,6 +234,24 @@ void * cmdthread(void * data) {
     }
 }
 
+unsigned char valuetypecheck(unsigned char *s) {
+ unsigned char *c=s;
+ unsigned char val=1;
+ unsigned char dot=0;
+ int n=0,l=strnlen(s,16);
+
+ if (*c=='-') {c++;}
+ for(;n<l&&val;n++) {
+  if (*c=='.') {dot++;}
+  else if (*c<'0' && *c>'9') {val=0;}
+  c++;
+ }
+ if (val==1 && dot==1) {val=2;}
+ if (dot>1) {val=0;}
+
+ return val;
+}
+
 int buildjson(unsigned char * jsonout,httpreq *request) {
     int n,m,max,jsonpos=0,len;
     unsigned char * jsonpnt=jsonout,comma=0;
@@ -253,7 +272,7 @@ int buildjson(unsigned char * jsonout,httpreq *request) {
          }
          comma=1;
          sprintf(jsonpnt,"{\"%s\":{\"%s\":{\"%s\":\"%s\",\"Message\":\"%s\"}}}",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
-         len=strnlen(jsonpnt,256);
+         len=strnlen(jsonpnt,65000);
          jsonpos+=len;
          jsonpnt+=len;
         }
@@ -272,24 +291,6 @@ int buildjson(unsigned char * jsonout,httpreq *request) {
     jsonpos+=3;
     *jsonpnt=0;
     return jsonpos;
-}
-
-unsigned char valuetypecheck(unsigned char *s) {
- unsigned char *c=s;
- unsigned char val=1;
- unsigned char dot=0;
- int n=0,l=strnlen(s,16);
-
- if (*c=='-') {c++;}
- for(;n<l&&val;n++) {
-  if (*c=='.') {dot++;}
-  else if (*c<'0' && *c>'9') {val=0;}
-  c++;
- }
- if (val==1 && dot==1) {val=2;}
- if (dot>1) {val=0;}
-
- return val;
 }
 
 int buildprtg(unsigned char * jsonout,httpreq *request) {
@@ -320,45 +321,45 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
 	 } else {
            sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\"",c->results[m].result_string,c->results[m].result_value);
 	 }
-         len=strnlen(jsonpnt,256);
+         len=strnlen(jsonpnt,65000);
          jsonpos+=len;
          jsonpnt+=len;
          if (request->limitmode) {
 	   if (valtype==2) {
              sprintf(jsonpnt,",\"float\":\"1\"");
-             len=strnlen(jsonpnt,256);
+             len=strnlen(jsonpnt,65000);
              jsonpos+=len;
              jsonpnt+=len;
 	   }
            sprintf(jsonpnt,",\"limitmode\":\"1\"");
-           len=strnlen(jsonpnt,256);
+           len=strnlen(jsonpnt,65000);
            jsonpos+=len;
            jsonpnt+=len;
 	   if (request->warnhigh<9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.02f\"",request->warnhigh); }
 	     else {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.00f\"",request->warnhigh);}
-             len=strnlen(jsonpnt,256);
+             len=strnlen(jsonpnt,65000);
              jsonpos+=len;
              jsonpnt+=len;
 	   }
 	   if (request->crithigh<9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.02f\"",request->crithigh); }
 	     else {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.00f\"",request->crithigh);}
-             len=strnlen(jsonpnt,256);
+             len=strnlen(jsonpnt,65000);
              jsonpos+=len;
              jsonpnt+=len;
 	   }
 	   if (request->warnlow>-9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.02f\"",request->warnlow); }
 	     else {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.00f\"",request->warnlow);}
-             len=strnlen(jsonpnt,256);
+             len=strnlen(jsonpnt,65000);
              jsonpos+=len;
              jsonpnt+=len;
 	   }
 	   if (request->critlow>-9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinError\":\"%0.02f\"",request->critlow); }
 	     else {sprintf(jsonpnt,",\"LimitMinError\":\"%0.00f\"",request->critlow);}
-             len=strnlen(jsonpnt,256);
+             len=strnlen(jsonpnt,65000);
              jsonpos+=len;
              jsonpnt+=len;
 	   }
@@ -375,8 +376,8 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
 
     if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",c->results[m-1].result_message);}
     else {sprintf(jsonpnt,"]}}");}
-    jsonpos+=strnlen(jsonpnt,256);
-    jsonpnt+=strnlen(jsonpnt,256);
+    jsonpos+=strnlen(jsonpnt,65000);
+    jsonpnt+=strnlen(jsonpnt,65000);
     *jsonpnt=0;
     return jsonpos;
 }
@@ -412,6 +413,8 @@ int str2httpreq(unsigned char * str, httpreq * request) {
  request->warnlow=-9999999999999;
  request->crithigh=9999999999999;
  request->critlow=-9999999999999;
+ request->maxval=100;
+ request->minval=0;
  request->warnon[0]=0;
  request->criton[0]=0;
  request->search[0]=0;
@@ -446,6 +449,10 @@ int str2httpreq(unsigned char * str, httpreq * request) {
    } else if (strncmp(c1,"critlow",16)==0) {
      request->critlow=atof(c2);
      request->limitmode=1;
+   } else if (strncmp(c1,"maxval",16)==0) {
+     request->maxval=atof(c2);
+   } else if (strncmp(c1,"minval",16)==0) {
+     request->minval=atof(c2);
    } else if (strncmp(c1,"warnon",16)==0) {
      strncpy(request->warnon,c2,64);
      request->warnon[63]=0;
