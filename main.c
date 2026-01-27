@@ -312,9 +312,10 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
      c=scheds[n];
      max=(c->resultsnum)-1;
      for(m=0;m<(c->resultsnum);m++) {
-      //Message combining
-      crmp=c->results[m].result_message;
-      if (*crmp!=0) {
+      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+       //Message combining
+       crmp=c->results[m].result_message;
+       if (*crmp!=0) {
         if (rmcp>resmsg_combi) {
           *rmcp=' '; rmcp++; *rmcp='|'; rmcp++; *rmcp=' '; rmcp++;
         }
@@ -322,72 +323,70 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
         strncpy(rmcp,crmp,msglen);
         rmcp+=msglen;
         *rmcp=0;
-      }
-      // ****
-      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
-         if (comma) {
-            *jsonpnt=',';
-            jsonpnt++;
-            jsonpos++;
-         }
-	  comma=1;
-	  valtype=valuetypecheck(c->results[m].result_value);
-	  if (valtype==2) {
-           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\",\"text\":\"%s\"",c->results[m].result_string,atof(c->results[m].result_value),crmp);
-	  } else {
-           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\",\"text\":\"%s\"",c->results[m].result_string,c->results[m].result_value,crmp);
-	  }
-         len=strnlen(jsonpnt,65000);
-         jsonpos+=len;
-         jsonpnt+=len;
-         if (request->limitmode) {
+       }
+       // ****
+       if (comma) {
+           *jsonpnt=',';
+           jsonpnt++;
+           jsonpos++;
+       }
+	   comma=1;
+	   valtype=valuetypecheck(c->results[m].result_value);
 	   if (valtype==2) {
-             sprintf(jsonpnt,",\"float\":\"1\"");
-             len=strnlen(jsonpnt,65000);
-             jsonpos+=len;
-             jsonpnt+=len;
+           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\",\"text\":\"%s\"",c->results[m].result_string,atof(c->results[m].result_value),crmp);
+	   } else {
+           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\",\"text\":\"%s\"",c->results[m].result_string,c->results[m].result_value,crmp);
 	   }
-           sprintf(jsonpnt,",\"limitmode\":\"1\"");
+       len=strnlen(jsonpnt,65000);
+       jsonpos+=len;
+       jsonpnt+=len;
+       if (request->limitmode) {
+	    if (valtype==2) {
+          sprintf(jsonpnt,",\"float\":\"1\"");
+          len=strnlen(jsonpnt,65000);
+          jsonpos+=len;
+          jsonpnt+=len;
+	    }
+        sprintf(jsonpnt,",\"limitmode\":\"1\"");
+        len=strnlen(jsonpnt,65000);
+        jsonpos+=len;
+        jsonpnt+=len;
+	    if (request->warnhigh<9999999999999) {
+	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.02f\"",request->warnhigh); }
+	     else {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.00f\"",request->warnhigh);}
            len=strnlen(jsonpnt,65000);
            jsonpos+=len;
            jsonpnt+=len;
-	   if (request->warnhigh<9999999999999) {
-	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.02f\"",request->warnhigh); }
-	     else {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.00f\"",request->warnhigh);}
-             len=strnlen(jsonpnt,65000);
-             jsonpos+=len;
-             jsonpnt+=len;
-	   }
-	   if (request->crithigh<9999999999999) {
+	    }
+	    if (request->crithigh<9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.02f\"",request->crithigh); }
 	     else {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.00f\"",request->crithigh);}
-             len=strnlen(jsonpnt,65000);
-             jsonpos+=len;
-             jsonpnt+=len;
-	   }
-	   if (request->warnlow>-9999999999999) {
+            len=strnlen(jsonpnt,65000);
+            jsonpos+=len;
+            jsonpnt+=len;
+	    }
+	    if (request->warnlow>-9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.02f\"",request->warnlow); }
 	     else {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.00f\"",request->warnlow);}
-             len=strnlen(jsonpnt,65000);
-             jsonpos+=len;
-             jsonpnt+=len;
-	   }
-	   if (request->critlow>-9999999999999) {
+            len=strnlen(jsonpnt,65000);
+            jsonpos+=len;
+            jsonpnt+=len;
+	    }
+	    if (request->critlow>-9999999999999) {
 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinError\":\"%0.02f\"",request->critlow); }
 	     else {sprintf(jsonpnt,",\"LimitMinError\":\"%0.00f\"",request->critlow);}
-             len=strnlen(jsonpnt,65000);
-             jsonpos+=len;
-             jsonpnt+=len;
+            len=strnlen(jsonpnt,65000);
+            jsonpos+=len;
+            jsonpnt+=len;
+	    }
 	   }
 
-	 }
-
-	 *jsonpnt='}';
-	 jsonpnt++;
-	 jsonpos++;
-        }
-     }
-    }
+	   *jsonpnt='}';
+	   jsonpnt++;
+	   jsonpos++;
+      } //query end
+     } //result loop end
+    } //cmdsched loop end
     jsonpnt--;
     if (*jsonpnt!=',') {jsonpnt++;}
 
