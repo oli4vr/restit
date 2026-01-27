@@ -10,6 +10,8 @@ bundle:
 	./restit -b main.csv
 	chmod +x ./genpkg.sh
 	./genpkg.sh
+	./genrpm.sh
 clean:
-	rm *.o restit restit.*.sh 2>/dev/null
+	rm -rf *.o restit restit.*.sh 2>/dev/null
 	rm -rf bin .restit 2>/dev/null
+	rm -rf *.deb *.rpm

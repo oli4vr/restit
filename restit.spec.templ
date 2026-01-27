@@ -1,0 +1,43 @@
+Name:           restit
+Version:        0.3
+Release:        __RELEASE__
+Summary:        GPFS REST API health check sensor
+License:        GPL
+URL:            https://github.com/oli4vr
+BuildArch:      noarch
+BuildRoot:      %{_tmppath}/%{name}-build
+Packager:       Olivier Van Rompuy <oli4vr@gmail.com>
+
+%description
+REST API health check sensor
+
+%prep
+mkdir %{name}-%{version}
+cp %{_sourcedir}/restit.sh .
+
+%build
+# Nothing to build
+
+%install
+mkdir -p $RPM_BUILD_ROOT/opt/restit
+install -m 0700 restit.sh $RPM_BUILD_ROOT/opt/restit/
+
+%clean
+rm -rf $RPM_BUILD_ROOT
+rm -rf %{_tmppath}/%{name}
+rm -rf %{_topdir}/BUILD/%{name}
+rm -rf restit
+
+%files
+%defattr(-,root,root,-)
+/opt/restit/restit.sh
+
+%post
+chmod u+x /opt/restit
+/opt/restit/restit.sh
+
+%preun
+chmod u+x /opt/restit
+/opt/restit/restit.sh -u
+
+%changelog
