@@ -13,6 +13,7 @@ restit application main c file
 #define TCP_BUF_SIZE 65536
 
 unsigned char basepath[256]={0};
+unsigned char localpath[256]={0};
 
 cmdsched *scheds[MAX_SCHEDS]={NULL};
 int schedc=0;
@@ -564,6 +565,7 @@ int main(int argc, char ** argv) {
     // 1 build manifest
 
     snprintf(basepath,256,"%s/.restit", getpwuid(getuid())->pw_dir);
+    snprintf(localpath,256,"./.restit");
     mkdir(basepath,S_IRWXU);
     snprintf(cfgpath,256,"%s/restit.cfg",basepath);
 
@@ -590,13 +592,13 @@ int main(int argc, char ** argv) {
                  argp=argv[0];
                  if (argc<1) {badsyntax=1;}
                  else {
-                    rc=generate_manifesto(argp, basepath);
+                    rc=generate_manifesto(argp, localpath);
                     if (rc<0) {
                         fprintf(stderr,"Error generating manifest\n");
                         return -1;
                     }
                     cleanup_manifesto();
-                    fprintf(stderr,"Manifest file generated in %s\n",basepath);
+                    fprintf(stderr,"Manifest file generated in %s\n",localpath);
                     return 0;
                  }
                  break;

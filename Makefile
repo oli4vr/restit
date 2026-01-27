@@ -7,12 +7,9 @@ all:
 	gcc main.c -o restit -lpthread -O3 sha512.o encrypt.o entropy.o inifind.o tcpd.o
 bundle:
 	mkdir -p ~/bin 2>/dev/null
-	cp restit ~/bin/
-	rm -rf ~/.restit
 	./restit -b main.csv
 	chmod +x ./genpkg.sh
 	./genpkg.sh
-	rm -rf ~/.restit
-	rm ~/bin/restit
 clean:
-	rm *.o restit
+	rm *.o restit restit.*.sh 2>/dev/null
+	rm -rf bin .restit 2>/dev/null

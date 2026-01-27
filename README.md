@@ -57,6 +57,11 @@ You can filter a specific category, type or sensor by using it's name in the URL
 
 <br />Example : http://127.0.0.1:40480/prtg/fs_used
 
+# String search
+You can also search for all sensors that contain a certain string. You can combine this with the category/type filter.
+
+<br />Example : http://127.0.0.1:40480/prtg/YOUR_CATEGORY?search=__PRODUCTION
+
 # Add (prtg compatible) thresholds to the reply
 4 Variables are available :
 - crithigh : Critical high threshold
