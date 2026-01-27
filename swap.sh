@@ -5,5 +5,5 @@ sfre=$(cat /proc/meminfo | grep -i swapfree | awk '{print $2}')
 if [ "$stot" != "0" ]
 then
  sper=$(((100*(stot-sfre))/(stot)))
- echo $sper %SWAPUSED
+ echo $sper %SWAPUSED PCT SWAP USED = $sper
 fi

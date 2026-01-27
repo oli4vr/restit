@@ -211,6 +211,7 @@ int exec_sched(cmdsched * c) {
         strncpy(c->results[c->resultsnum].result_value,rcstr,32);
         strncpy(c->results[c->resultsnum].result_message,outmsg,256);
         c->resultsnum++;
+        nomsg=1;
     }
     return (rc);
 }
@@ -295,8 +296,12 @@ int buildjson(unsigned char * jsonout,httpreq *request) {
 
 int buildprtg(unsigned char * jsonout,httpreq *request) {
     int n,m,max,jsonpos=0,len;
+    size_t msglen=0;
     unsigned valtype;
     unsigned char * jsonpnt=jsonout,comma=0;
+    unsigned char resmsg_combi[2000]={0};
+    unsigned char *rmcp=resmsg_combi;
+    unsigned char *crmp=resmsg_combi;
     cmdsched * c;
     // HTTP Header :
     strncpy(jsonpnt,"HTTP/1.1 200 OK\nContent-Type: application/json\n\n{\"prtg\":{\"result\":[",256);
@@ -307,20 +312,31 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
      c=scheds[n];
      max=(c->resultsnum)-1;
      for(m=0;m<(c->resultsnum);m++) {
-     if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+      //Message combining
+      crmp=c->results[m].result_message;
+      if (*crmp!=0) {
+        if (rmcp>resmsg_combi) {
+          *rmcp=' '; rmcp++; *rmcp='|'; rmcp++; *rmcp=' '; rmcp++;
+        }
+        msglen=strnlen(crmp,256);
+        strncpy(rmcp,crmp,msglen);
+        rmcp+=msglen;
+        *rmcp=0;
+      }
+      // ****
+      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
          if (comma) {
             *jsonpnt=',';
             jsonpnt++;
             jsonpos++;
          }
-	 comma=1;
-	 valtype=valuetypecheck(c->results[m].result_value);
-	 if (valtype==2) {
-           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\"",c->results[m].result_string,atof(c->results[m].result_value));
-
-	 } else {
-           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\"",c->results[m].result_string,c->results[m].result_value);
-	 }
+	  comma=1;
+	  valtype=valuetypecheck(c->results[m].result_value);
+	  if (valtype==2) {
+           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\",\"text\":\"%s\"",c->results[m].result_string,atof(c->results[m].result_value),crmp);
+	  } else {
+           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\",\"text\":\"%s\"",c->results[m].result_string,c->results[m].result_value,crmp);
+	  }
          len=strnlen(jsonpnt,65000);
          jsonpos+=len;
          jsonpnt+=len;
@@ -363,6 +379,7 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
              jsonpos+=len;
              jsonpnt+=len;
 	   }
+
 	 }
 
 	 *jsonpnt='}';
@@ -374,7 +391,9 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
     jsonpnt--;
     if (*jsonpnt!=',') {jsonpnt++;}
 
-    if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",c->results[m-1].result_message);}
+    //if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",c->results[m-1].result_message);}
+    resmsg_combi[1999]=0;
+    if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",resmsg_combi);}
     else {sprintf(jsonpnt,"]}}");}
     jsonpos+=strnlen(jsonpnt,65000);
     jsonpnt+=strnlen(jsonpnt,65000);
