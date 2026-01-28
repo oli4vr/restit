@@ -15,6 +15,7 @@ restit application main c file
 unsigned char basepath[256]={0};
 unsigned char localpath[256]={0};
 
+
 cmdsched *scheds[MAX_SCHEDS]={NULL};
 int schedc=0;
 
@@ -564,11 +565,19 @@ int main(int argc, char ** argv) {
     // 0 normal daemon
     // 1 build manifest
 
-    snprintf(basepath,256,"%s/.restit", getpwuid(getuid())->pw_dir);
-    snprintf(localpath,256,"./.restit");
+    const char *envpath = getenv("RESTIT_SVCNAME");
+    if (*envpath==0) {
+     snprintf(basepath,256,"%s/.restit", getpwuid(getuid())->pw_dir);
+     snprintf(localpath,256,"./.restit");
+    } else {
+     snprintf(basepath,256,"%s/.%s", getpwuid(getuid())->pw_dir, envpath);
+     snprintf(localpath,256,"./.%s",envpath);
+    }
+//    fprintf(stderr,"basepath = %s\n",basepath);
+//    fprintf(stderr,"localpath = %s\n",localpath);
     mkdir(basepath,S_IRWXU);
+    mkdir(localpath,S_IRWXU);
     snprintf(cfgpath,256,"%s/restit.cfg",basepath);
-
 
     if (fp=fopen(cfgpath,"r")) {
         fclose(fp);

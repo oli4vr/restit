@@ -1,5 +1,6 @@
 #!/bin/bash
-#OPATH=$(pwd)
+. ./env_vars.sh
+
 DISTRO=$(cat /etc/os-release | head -n1 | cut -d \" -f 2 | tr -d \  )
 ARCH=$(uname -p | xargs echo)
 PKGNAM=restit.${DISTRO}.${ARCH}.$(date +%Y%m%d).sh
@@ -7,8 +8,9 @@ PKGNAM=restit.${DISTRO}.${ARCH}.$(date +%Y%m%d).sh
 mkdir -p bin
 cp restit bin/restit
 
-cp restit.cfg .restit/
-tar -c bin/restit .restit | gzip -9c > pkg.tgz
+cp restit.cfg .${RESTIT_SVCNAME}/
+tar -c bin/restit .${RESTIT_SVCNAME} env_vars.sh | gzip -9c > pkg.tgz
+tar -ztv < pkg.tgz
 
 cp bundle.sh ${PKGNAM}
 base64 <pkg.tgz | sed -e 's/^/#B64#/' >>${PKGNAM}

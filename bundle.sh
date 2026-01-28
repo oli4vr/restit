@@ -1,13 +1,13 @@
 #!/bin/bash
 # restit installer script
 # by Olivier Van Rompuy
+
 if [ "$1" = "-u" ]
 then
  systemctl stop restit.service
  systemctl disable restit.service
  rm /etc/systemd/system/restit.service
  systemctl daemon-reload
- rm -rf ~/.restit
  rm -rf ~/bin/restit
  exit 0
 fi
@@ -51,6 +51,10 @@ rm -rf ${TMPD}
 if [ "$USER" = root ]
 then
 
+chmod +x env_vars.sh
+. ./env_vars.sh
+rm -rf env_vars.sh 2>/dev/null
+
 cat > /etc/systemd/system/restit.service <<EOF
 [Unit]
 Description=restit service
@@ -58,6 +62,7 @@ After=network.target
 
 [Service]
 WorkingDirectory=/root/
+Environment="RESTIT_SVCNAME=${RESTIT_SVCNAME}"
 ExecStart=/root/bin/restit
 ExecReload=/bin/kill -HUP \$MAINPID
 User=root
