@@ -3,7 +3,7 @@
 
 DISTRO=$(cat /etc/os-release | head -n1 | cut -d \" -f 2 | tr -d \  )
 ARCH=$(uname -p | xargs echo)
-PKGNAM=restit.${DISTRO}.${ARCH}.$(date +%Y%m%d).sh
+PKGNAM=$(echo restit.${DISTRO}.${ARCH}.$(date +%Y%m%d).sh | tr -d '()[]/' )
 
 mkdir -p bin
 cp restit bin/restit

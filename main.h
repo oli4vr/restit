@@ -30,6 +30,8 @@ typedef struct _cmdsched {
  unsigned char vault[256];
  unsigned char vaultfile[256];
  unsigned char keystring[256];
+ unsigned char scriptname[64];
+ unsigned char shell[128];
  unsigned char commands[8127];
  result_record results[MAX_RESULTS];
  unsigned int resultsnum;

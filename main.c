@@ -15,6 +15,8 @@ restit application main c file
 unsigned char basepath[256]={0};
 unsigned char localpath[256]={0};
 
+unsigned char restit_cmd[256]={0};
+
 
 cmdsched *scheds[MAX_SCHEDS]={NULL};
 int schedc=0;
@@ -23,12 +25,13 @@ cfgmain cfg;
 
 unsigned char stopsrc=0;
 
-cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, unsigned char mode) {
+//manifest_nextsched
 //Process 1 line in the manifest csv
 //Mode 0 = Get script from file
 //Mode 1 = Get script from manifest vault
 //Returns NULL pointer if csv formatting is incorrect
 //Returns pointer to cmdsched
+cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, unsigned char mode) {
     unsigned char tmp[256]={0};
     unsigned char vault[256]={0};
     unsigned char vaultfile[256]={0};
@@ -37,6 +40,8 @@ cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, un
     uint32_t seconds;
     unsigned char * buffer=*inbuff;
     unsigned char * c=buffer, * p=buffer;
+    unsigned char sfname[256]={0};
+    unsigned char shell[128]={0};
     long int offset;
     int rc,rb;
     cmdsched * rcsched;
@@ -54,10 +59,15 @@ cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, un
     seconds=atoi(tmp);
     if (seconds < 1) return NULL;
     c++;p=c; while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
+    strncpy(sfname,p,256);
+    sfname[255]=0;
+    c++;p=c; while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
+    strncpy(shell,p,128);
+    shell[127]=0;
     if (mode==0) {
-        strncpy(tmp,p,256);
-        tmp[255]=0;
-        fp=fopen(tmp,"r+b");
+        //strncpy(tmp,p,256);
+        //tmp[255]=0;
+        fp=fopen(sfname,"r+b");
         if (fp==NULL) return NULL;
         rc=fread(commands,1,8126,fp);
         if (rc<1) return NULL;
@@ -75,6 +85,8 @@ cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, un
     memcpy(rcsched->vault,vault,256);
     memcpy(rcsched->keystring,keystring,256);
     memcpy(rcsched->commands,commands,8127);
+    memcpy(rcsched->shell,shell,128);
+    memcpy(rcsched->scriptname,sfname,64);
     rcsched->seconds=seconds;
     rcsched->resultsnum=0;
     return rcsched;
@@ -91,8 +103,8 @@ void cleanup_manifesto() {
     schedc=0;
 }
 
-int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
 //Generate the manifesto vault files
+int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     FILE * fp;
     int rc,n;
     unsigned char csvfile[MESSAGE_SIZE]={0};
@@ -145,8 +157,8 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     return schedc;
 }
 
-int load_manifesto(unsigned char * spath) {
 //Load the manifesto
+int load_manifesto(unsigned char * spath) {
     FILE * fp;
     int rc,n;
     long int offset;
@@ -185,13 +197,17 @@ int exec_sched(cmdsched * c) {
     int rc;
     //unsigned char buffer[MESSAGE_SIZE+1]={0};
     unsigned char buffer[65535]={0};
+    unsigned char cmdstr[256]={0};
     unsigned char *sp=buffer;
     unsigned char neof=1,nomsg=1;
     unsigned char *rcstr, *outstr, *outmsg;
 
     FILE * pipe;
 
-    pipe=popen(c->commands,"r");
+    rc=sprintf(cmdstr,"%s run %s </dev/null\n",restit_cmd,c->scriptname);
+
+//    pipe=popen(c->commands,"r");
+    pipe=popen(cmdstr,"r");
     if (pipe==NULL) return -1;
     rc=fread(buffer,1,MESSAGE_SIZE,pipe);
     pclose(pipe);
@@ -216,6 +232,35 @@ int exec_sched(cmdsched * c) {
         nomsg=1;
     }
     return (rc);
+}
+
+int exec_script(cmdsched * c) {
+    int rc;
+    unsigned char neof=1,nomsg=1;
+    unsigned char *rcstr, *outstr, *outmsg;
+
+    FILE * pipe;
+
+    pipe=popen(c->shell,"w");
+    if (pipe==NULL) return -1;
+    rc=fwrite(c->commands,1,strnlen(c->commands,MESSAGE_SIZE),pipe);
+    pclose(pipe);
+
+    return (rc);
+}
+
+// Find specific cmdsched entry based on script name
+// return NULL if not found
+cmdsched * find_sched(unsigned char * sname) {
+ int n=0;
+ for(;n<schedc;n++) {
+   if (scheds[n]!=NULL) {
+    if (strncmp(scheds[n]->scriptname,sname,64)==0) {
+        return scheds[n];
+    }
+   }
+ }
+ return NULL;
 }
 
 int ini_loadcfg(cfgmain * c,unsigned char * inifile) {
@@ -555,7 +600,7 @@ int main(int argc, char ** argv) {
     tcpd tcp_http;
 
     FILE * fp;
-    unsigned char cfgpath[256]={0};
+    unsigned char cfgpath[267]={0};
 
     unsigned char badsyntax=0;
     unsigned char * argp;
@@ -565,8 +610,13 @@ int main(int argc, char ** argv) {
     // 0 normal daemon
     // 1 build manifest
 
+    unsigned char exemode=0;
+
     const char *envpath = getenv("RESTIT_SVCNAME");
-    if (*envpath==0) {
+
+    strncpy(restit_cmd,argv[0],256);
+
+    if (envpath==NULL) {
      snprintf(basepath,256,"%s/.restit", getpwuid(getuid())->pw_dir);
      snprintf(localpath,256,"./.restit");
     } else {
@@ -577,7 +627,7 @@ int main(int argc, char ** argv) {
 //    fprintf(stderr,"localpath = %s\n",localpath);
     mkdir(basepath,S_IRWXU);
     mkdir(localpath,S_IRWXU);
-    snprintf(cfgpath,256,"%s/restit.cfg",basepath);
+    snprintf(cfgpath,267,"%s/restit.cfg",basepath);
 
     if (fp=fopen(cfgpath,"r")) {
         fclose(fp);
@@ -589,34 +639,42 @@ int main(int argc, char ** argv) {
     }
     rc=ini_loadcfg(&cfg,cfgpath);
 
-    argc--;argv++;  
-    while(argc>0 && badsyntax==0) {
-        argp=argv[0];
-        if (*argp=='-') {
-            switch (argp[1]) {
-                case 'b':
-                 runmode=1;
-                 argc--;
-                 argv++;
-                 argp=argv[0];
-                 if (argc<1) {badsyntax=1;}
-                 else {
-                    rc=generate_manifesto(argp, localpath);
-                    if (rc<0) {
-                        fprintf(stderr,"Error generating manifest\n");
-                        return -1;
-                    }
-                    cleanup_manifesto();
-                    fprintf(stderr,"Manifest file generated in %s\n",localpath);
-                    return 0;
-                 }
-                 break;
-                case 'h':
-                 badsyntax=2;
-                 break;
-            }
+    if (argc==3) {
+        if (strncmp(argv[1],"run",4)==0) {
+            exemode=1;
         }
-        argv++;
+    }
+
+    if (exemode==0) {
+    argc--;argv++;  
+     while(argc>0 && badsyntax==0) {
+         argp=argv[0];
+         if (*argp=='-') {
+             switch (argp[1]) {
+                 case 'b':
+                  runmode=1;
+                  argc--;
+                  argv++;
+                  argp=argv[0];
+                  if (argc<1) {badsyntax=1;}
+                  else {
+                     rc=generate_manifesto(argp, localpath);
+                     if (rc<0) {
+                         fprintf(stderr,"Error generating manifest\n");
+                         return -1;
+                     }
+                     cleanup_manifesto();
+                     fprintf(stderr,"Manifest file generated in %s\n",localpath);
+                     return 0;
+                  }
+                  break;
+                 case 'h':
+                  badsyntax=2;
+                  break;
+             }
+         }
+         argv++;
+     }
     }
 
     if (badsyntax>0) {
@@ -625,11 +683,21 @@ int main(int argc, char ** argv) {
         return 1;
     }
 
-    fprintf(stderr,"%s\n",basepath);
+    //fprintf(stderr,"%s\n",basepath);
     rc=load_manifesto(basepath);
     if (rc<1) {
         fprintf(stderr,"Error loading manifesto\n");
         return -2;
+    }
+
+    // run script with name
+    if (exemode==1) {
+        cmdsched * runcmd=find_sched(argv[2]);
+        if (runcmd==NULL) {
+            fprintf(stderr,"Error: Script not found in manifest\n");
+            return -5;
+        }
+        return exec_script(runcmd);
     }
 
     // Generate a separate scheduling thread for each configured cmdsched

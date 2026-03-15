@@ -10,7 +10,7 @@ Turn simple command scripts into a custom json rest api sensor.
 </pre>
 
 <pre>main.csv syntax :
-Category;Type;schedule_frequency_seconds;script_file;
+Category;Type;schedule_frequency_seconds;script_file;shell_exe;
 </pre>
 
 # Important rules

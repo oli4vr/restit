@@ -1,2 +1,3 @@
-oschecks;fs_used;300;df.sh;
-oschecks;swap_used;300;swap.sh;
+oschecks;fs_used;300;df.sh;/usr/bin/bash;
+oschecks;swap_used;300;swap.sh;/usr/bin/bash;
+python;test;300;test.py;/usr/bin/python3;
