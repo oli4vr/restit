@@ -1,2 +1,2 @@
 #!/usr/bin/python3
-print("0 OK")
+print("0 PYTHON_TEST OK")
