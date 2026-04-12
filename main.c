@@ -505,7 +505,7 @@ int buildhtml(unsigned char * htmlout,httpreq *request) {
      }
     }
     if (maxwidth_msg<7) maxwidth_msg=7;
-    len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;}table{border-collapse:collapse;width:100%;max-width:1600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}th,td{padding:16px;text-align:left;border-bottom:1px solid #eee;}th{background:#6366f1;color:#fff;font-weight:600;position:sticky;top:0;}tr:hover{background:#f8fafc;}tr:nth-child(even){background:#fafafa;}td{font-size:14px;}tr:hover td{background:#f0f2ff;}@media(max-width:768px){table{display:block;overflow-x:auto;}}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}</style></head><body><h1>📊 restit Sensor Data</h1><table><thead><tr><th width='12%'>Category</th><th width='12%'>Type</th><th width='22%'>Name</th><th width='12%'>Value</th><th width='42%'>Message</th></tr></thead><tbody>",1024);
+    len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;}table{border-collapse:collapse;width:100%%;max-width:1600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}th,td{padding:16px;text-align:left;border-bottom:1px solid #eee;}th{background:#6366f1;color:#fff;font-weight:600;position:sticky;top:0;}tr:hover{background:#f8fafc;}tr:nth-child(even){background:#fafafa;}td{font-size:14px;}tr:hover td{background:#f0f2ff;}@media(max-width:768px){table{display:block;overflow-x:auto;}}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}</style></head><body><h1>📊 restit Sensor Data</h1><table><thead><tr><th width='12%%'>Category</th><th width='12%%'>Type</th><th width='22%%'>Name</th><th width='12%%'>Value</th><th width='42%%'>Message</th></tr></thead><tbody>");
     pos+=len;
     htmlpnt+=len;
     for(n=0;n<schedc;n++) {
@@ -648,7 +648,7 @@ void * http_handler(void *p) {
  struct timeval tv;
  unsigned char out[4]={0};
  unsigned char buf[TCP_BUF_SIZE]={0};
- unsigned char jsonreply[65535];
+ unsigned char jsonreply[65536];
  httpreq request;
  int jsonlen;
  int rc,l;
