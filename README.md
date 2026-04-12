@@ -165,9 +165,4 @@ oschecks  perfstats  MEM_CACHE         64
 
 ### HTML Format (`/html`)
 
-Modern styled HTML page with:
-- Responsive table layout
-- Sticky header
-- Hover effects
-- Alternating row colors
-- Color-coded Type field
+Human readable html format with css styling.
