@@ -75,5 +75,4 @@ for card_dir in "$GPU_PATH"/card*; do
     echo "$vram_pct VRAM_PCT_USED"
     echo "$temp_c GPU_TEMP_C"
     echo "$temp_f GPU_TEMP_F"
-    echo "---"
 done

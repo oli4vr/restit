@@ -52,6 +52,5 @@ for ((gpu=0; gpu<gpu_count; gpu++)); do
     echo "$gpu_clock_mhz GPU_CLOCK_FREQ"
     echo "$vram_clock_mhz VRAM_CLOCK_FREQ"
     echo "$fan_pct GPU_FAN_PCT"
-    echo "---"
 done
 

@@ -117,5 +117,4 @@ for card_dir in "$GPU_PATH"/card*; do
     echo "$gpu_clock_mhz GPU_CLOCK_FREQ"
     echo "$vram_clock_mhz VRAM_CLOCK_FREQ"
     echo "$fan_pct GPU_FAN_PCT"
-    echo "---"
 done
