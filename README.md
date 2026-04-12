@@ -73,7 +73,7 @@ Category;Type;schedule_frequency_seconds;script_file;shell_exe;
 
 ## Important Rules
 
-- Command scripts can be max 7900 bytes
+- Command scripts can be max 7900 bytes (This will be unlimited in the future, once I upgrade to the new evlt code)
 - Scripts must output `VALUE SENSORNAME OPTIONAL_MESSAGE` per line
 - Each line becomes a separate sensor with its own entry in the output
 
