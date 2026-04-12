@@ -1,0 +1,3 @@
+performance;system;1;mon_scripts/perfstats.sh;/usr/bin/bash;
+performance;gpubasic;1;mon_scripts/amdgpu_basic.sh;/usr/bin/bash;
+performance;gpuadv;1;mon_scripts/amdgpu_advanced.sh;/usr/bin/bash;

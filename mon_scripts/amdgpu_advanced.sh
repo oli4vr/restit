@@ -29,7 +29,7 @@ for card_dir in "$GPU_PATH"/card*; do
         if [[ -n "$hwmon_dir" ]] && [[ -f "$hwmon_dir/power1_input" ]]; then
             power_raw=$(cat "$hwmon_dir/power1_input" 2>/dev/null)
             if [[ -n "$power_raw" ]] && [[ "$power_raw" =~ ^[0-9]+$ ]]; then
-                power_watts=$((power_raw / 1000))
+                power_watts=$((power_raw / 1000000))
             fi
         fi
     fi
@@ -52,7 +52,7 @@ for card_dir in "$GPU_PATH"/card*; do
     if [[ -f "$gpu_dir/pp_dpm_sclk" ]]; then
         gpu_clock_raw=$(grep -oP '\d+' "$gpu_dir/pp_dpm_sclk" 2>/dev/null | tail -1)
         if [[ -n "$gpu_clock_raw" ]] && [[ "$gpu_clock_raw" =~ ^[0-9]+$ ]]; then
-            gpu_clock_mhz=$((gpu_clock_raw / 1000))
+            gpu_clock_mhz=$((gpu_clock_raw))
         fi
     elif [[ -f "$gpu_dir/drm/card$gpu_index/device/pp_dpm_sclk" ]]; then
         gpu_clock_raw=$(grep -oP '\d+' "$gpu_dir/drm/card$gpu_index/device/pp_dpm_sclk" 2>/dev/null | tail -1)
@@ -71,7 +71,7 @@ for card_dir in "$GPU_PATH"/card*; do
     if [[ -f "$gpu_dir/pp_dpm_mclk" ]]; then
         vram_clock_raw=$(grep -oP '\d+' "$gpu_dir/pp_dpm_mclk" 2>/dev/null | tail -1)
         if [[ -n "$vram_clock_raw" ]] && [[ "$vram_clock_raw" =~ ^[0-9]+$ ]]; then
-            vram_clock_mhz=$((vram_clock_raw / 1000))
+            vram_clock_mhz=$((vram_clock_raw))
         fi
     elif [[ -f "$gpu_dir/drm/card$gpu_index/device/pp_dpm_mclk" ]]; then
         vram_clock_raw=$(grep -oP '\d+' "$gpu_dir/drm/card$gpu_index/device/pp_dpm_mclk" 2>/dev/null | tail -1)

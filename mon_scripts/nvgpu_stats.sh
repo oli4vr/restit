@@ -31,7 +31,7 @@ for ((gpu=0; gpu<gpu_count; gpu++)); do
     fi
     
     if [[ -n "$power_mw" ]] && [[ "$power_mw" =~ ^[0-9]+$ ]]; then
-        power_watts=$((power_mw / 1000))
+        power_watts=$((power_mw / 100))
     else
         power_watts="N/A"
     fi
