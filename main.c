@@ -373,71 +373,69 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
        }
        // ****
        if (comma) {
-           *jsonpnt=',';
-           jsonpnt++;
-           jsonpos++;
+            *jsonpnt=',';
+            jsonpnt++;
+            jsonpos++;
        }
-	   comma=1;
-	   valtype=valuetypecheck(c->results[m].result_value);
-	   if (valtype==2) {
-           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\",\"text\":\"%s\"",c->results[m].result_string,atof(c->results[m].result_value),crmp);
-	   } else {
-           sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\",\"text\":\"%s\"",c->results[m].result_string,c->results[m].result_value,crmp);
-	   }
-       len=strnlen(jsonpnt,65000);
-       jsonpos+=len;
-       jsonpnt+=len;
-       if (request->limitmode) {
-	    if (valtype==2) {
-          sprintf(jsonpnt,",\"float\":\"1\"");
-          len=strnlen(jsonpnt,65000);
-          jsonpos+=len;
-          jsonpnt+=len;
-	    }
-        sprintf(jsonpnt,",\"limitmode\":\"1\"");
+ 	   comma=1;
+ 	   valtype=valuetypecheck(c->results[m].result_value);
+ 	   if (valtype==2) {
+            sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%0.02f\",\"text\":\"%s\"",c->results[m].result_string,atof(c->results[m].result_value),crmp);
+ 	   } else {
+            sprintf(jsonpnt,"{\"channel\":\"%s\",\"value\":\"%s\",\"text\":\"%s\"",c->results[m].result_string,c->results[m].result_value,crmp);
+ 	   }
         len=strnlen(jsonpnt,65000);
         jsonpos+=len;
         jsonpnt+=len;
-	    if (request->warnhigh<9999999999999) {
-	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.02f\"",request->warnhigh); }
-	     else {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.00f\"",request->warnhigh);}
+        if (request->limitmode) {
+ 	    if (valtype==2) {
+           sprintf(jsonpnt,",\"float\":\"1\"");
            len=strnlen(jsonpnt,65000);
            jsonpos+=len;
            jsonpnt+=len;
-	    }
-	    if (request->crithigh<9999999999999) {
-	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.02f\"",request->crithigh); }
-	     else {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.00f\"",request->crithigh);}
+ 	    }
+         sprintf(jsonpnt,",\"limitmode\":\"1\"");
+         len=strnlen(jsonpnt,65000);
+         jsonpos+=len;
+         jsonpnt+=len;
+ 	    if (request->warnhigh<9999999999999) {
+ 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.02f\"",request->warnhigh); }
+ 	     else {sprintf(jsonpnt,",\"LimitMaxWarning\":\"%0.00f\"",request->warnhigh);}
             len=strnlen(jsonpnt,65000);
             jsonpos+=len;
             jsonpnt+=len;
-	    }
-	    if (request->warnlow>-9999999999999) {
-	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.02f\"",request->warnlow); }
-	     else {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.00f\"",request->warnlow);}
-            len=strnlen(jsonpnt,65000);
-            jsonpos+=len;
-            jsonpnt+=len;
-	    }
-	    if (request->critlow>-9999999999999) {
-	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinError\":\"%0.02f\"",request->critlow); }
-	     else {sprintf(jsonpnt,",\"LimitMinError\":\"%0.00f\"",request->critlow);}
-            len=strnlen(jsonpnt,65000);
-            jsonpos+=len;
-            jsonpnt+=len;
-	    }
-	   }
+ 	    }
+ 	    if (request->crithigh<9999999999999) {
+ 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.02f\"",request->crithigh); }
+ 	     else {sprintf(jsonpnt,",\"LimitMaxError\":\"%0.00f\"",request->crithigh);}
+             len=strnlen(jsonpnt,65000);
+             jsonpos+=len;
+             jsonpnt+=len;
+ 	    }
+ 	    if (request->warnlow>-9999999999999) {
+ 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.02f\"",request->warnlow); }
+ 	     else {sprintf(jsonpnt,",\"LimitMinWarning\":\"%0.00f\"",request->warnlow);}
+             len=strnlen(jsonpnt,65000);
+             jsonpos+=len;
+             jsonpnt+=len;
+ 	    }
+ 	    if (request->critlow>-9999999999999) {
+ 	     if (valtype==2) {sprintf(jsonpnt,",\"LimitMinError\":\"%0.02f\"",request->critlow); }
+ 	     else {sprintf(jsonpnt,",\"LimitMinError\":\"%0.00f\"",request->critlow);}
+             len=strnlen(jsonpnt,65000);
+             jsonpos+=len;
+             jsonpnt+=len;
+ 	    }
+ 	   }
 
-	   *jsonpnt='}';
-	   jsonpnt++;
-	   jsonpos++;
-      } //query end
-     } //result loop end
-    } //cmdsched loop end
+ 	   *jsonpnt='}';
+ 	   jsonpnt++;
+ 	   jsonpos++;
+       } //query end
+      } //result loop end
+     } //cmdsched loop end
     jsonpnt--;
     if (*jsonpnt!=',') {jsonpnt++;}
-
-    //if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",c->results[m-1].result_message);}
     resmsg_combi[1999]=0;
     if (m>0) {sprintf(jsonpnt,"],\"Text\":\"%s\"}}",resmsg_combi);}
     else {sprintf(jsonpnt,"]}}");}
@@ -445,6 +443,95 @@ int buildprtg(unsigned char * jsonout,httpreq *request) {
     jsonpnt+=strnlen(jsonpnt,65000);
     *jsonpnt=0;
     return jsonpos;
+}
+
+int buildtext(unsigned char * textout,httpreq *request) {
+    int n,m,max,pos=0,len;
+    unsigned char * txtpnt=textout;
+    cmdsched * c;
+    int maxwidth_cat=8,maxwidth_type=8,maxwidth_name=16,maxwidth_val=8,maxwidth_msg=32;
+    unsigned char linebuf[65535];
+    for(n=0;n<schedc;n++) {
+     c=scheds[n];
+     max=(c->resultsnum)-1;
+     for(m=0;m<(c->resultsnum);m++) {
+      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+       if (strlen(c->vault)>maxwidth_cat) maxwidth_cat=strlen(c->vault);
+       if (strlen(c->keystring)>maxwidth_type) maxwidth_type=strlen(c->keystring);
+       if (strlen(c->results[m].result_string)>maxwidth_name) maxwidth_name=strlen(c->results[m].result_string);
+       if (strlen(c->results[m].result_value)>maxwidth_val) maxwidth_val=strlen(c->results[m].result_value);
+       if (strlen(c->results[m].result_message)>maxwidth_msg) maxwidth_msg=strlen(c->results[m].result_message);
+      }
+     }
+    }
+    if (maxwidth_msg<7) maxwidth_msg=7;
+    len=sprintf(txtpnt,"HTTP/1.1 200 OK\nContent-Type: text/plain\n\n%-*s  %-*s  %-*s  %-*s  %s\n",maxwidth_cat,"CATEGORY",maxwidth_type,"TYPE",maxwidth_name,"NAME",maxwidth_val,"VALUE","MESSAGE");
+    pos+=len;
+    txtpnt+=len;
+//    len=sprintf(txtpnt,"%s  %s  %s  %s  %s\n",strncpy((char*)linebuf,"================",maxwidth_cat),strncpy((char*)linebuf,"================",maxwidth_type),strncpy((char*)linebuf,"================",maxwidth_name),strncpy((char*)linebuf,"================",maxwidth_val),"================");
+//    pos+=len;
+//    txtpnt+=len;
+    for(n=0;n<schedc;n++) {
+     c=scheds[n];
+     max=(c->resultsnum)-1;
+     for(m=0;m<(c->resultsnum);m++) {
+      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+       len=sprintf(txtpnt,"%-*s  %-*s  %-*s  %-*s  %s\n",maxwidth_cat,c->vault,maxwidth_type,c->keystring,maxwidth_name,c->results[m].result_string,maxwidth_val,c->results[m].result_value,c->results[m].result_message);
+       pos+=len;
+       txtpnt+=len;
+      }
+     }
+    }
+    return pos;
+}
+
+int buildhtml(unsigned char * htmlout,httpreq *request) {
+    int n,m,max,pos=0,len;
+    unsigned char * htmlpnt=htmlout;
+    cmdsched * c;
+    unsigned char trclass[16];
+    int maxwidth_cat=8,maxwidth_type=8,maxwidth_name=16,maxwidth_val=8,maxwidth_msg=32;
+    for(n=0;n<schedc;n++) {
+     c=scheds[n];
+     max=(c->resultsnum)-1;
+     for(m=0;m<(c->resultsnum);m++) {
+      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+       if (strlen(c->vault)>maxwidth_cat) maxwidth_cat=strlen(c->vault);
+       if (strlen(c->keystring)>maxwidth_type) maxwidth_type=strlen(c->keystring);
+       if (strlen(c->results[m].result_string)>maxwidth_name) maxwidth_name=strlen(c->results[m].result_string);
+       if (strlen(c->results[m].result_value)>maxwidth_val) maxwidth_val=strlen(c->results[m].result_value);
+       if (strlen(c->results[m].result_message)>maxwidth_msg) maxwidth_msg=strlen(c->results[m].result_message);
+      }
+     }
+    }
+    if (maxwidth_msg<7) maxwidth_msg=7;
+    len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;}table{border-collapse:collapse;width:100%;max-width:1600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}th,td{padding:16px;text-align:left;border-bottom:1px solid #eee;}th{background:#6366f1;color:#fff;font-weight:600;position:sticky;top:0;}tr:hover{background:#f8fafc;}tr:nth-child(even){background:#fafafa;}td{font-size:14px;}tr:hover td{background:#f0f2ff;}@media(max-width:768px){table{display:block;overflow-x:auto;}}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}</style></head><body><h1>📊 restit Sensor Data</h1><table><thead><tr><th width='12%'>Category</th><th width='12%'>Type</th><th width='22%'>Name</th><th width='12%'>Value</th><th width='42%'>Message</th></tr></thead><tbody>",1024);
+    pos+=len;
+    htmlpnt+=len;
+    for(n=0;n<schedc;n++) {
+     c=scheds[n];
+     max=(c->resultsnum)-1;
+     for(m=0;m<(c->resultsnum);m++) {
+      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+       if ((n+m)%2==0) strncpy(trclass,"odd",16);
+       else strncpy(trclass,"even",16);
+       len=sprintf(htmlpnt,"<tr class='%s'><td>%s</td><td><span style='color:#64748b'>%s</span></td><td><strong>%s</strong></td><td><code>%s</code></td><td>%s</td></tr>",trclass,c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
+       pos+=len;
+       htmlpnt+=len;
+      }
+     }
+    }
+    len=sprintf(htmlpnt,"</tbody></table>");
+    pos+=len;
+    htmlpnt+=len;
+    if (schedc==0) {
+     len=sprintf(htmlpnt,"<p class='empty'>No sensor data available</p>");
+     pos+=len;
+     htmlpnt+=len;
+    }
+    len=sprintf(htmlpnt,"</body></html>");
+    pos+=len;
+    return pos;
 }
 
 //Process the http header and determine method and path
@@ -576,17 +663,23 @@ void * http_handler(void *p) {
  l=recv(m->sock, buf, TCP_BUF_SIZE, 0);
  str2httpreq(buf,&request);
  if(strncmp(request.method,"GET",16)==0)
- {
-  if (strncmp(request.sitem1,"test",4)==0) {
-   strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><pre>HTTP test request</pre></body></html>\n",256);
-   jsonlen=strnlen(jsonreply,256);
-  } else if (strncmp(request.sitem1,"prtg",4)==0) {
-   jsonlen=buildprtg(jsonreply,&request); 
-  } else {
-   jsonlen=buildjson(jsonreply,&request);
+  {
+   if (strncmp(request.sitem1,"test",4)==0) {
+    strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><pre>HTTP test request</pre></body></html>\n",256);
+    jsonlen=strnlen(jsonreply,256);
+   } else if (strncmp(request.sitem1,"json",4)==0) {
+    jsonlen=buildprtg(jsonreply,&request); 
+   } else if (strncmp(request.sitem1,"prtg",4)==0) {
+    jsonlen=buildprtg(jsonreply,&request); 
+   } else if (strncmp(request.sitem1,"text",4)==0) {
+    jsonlen=buildtext(jsonreply,&request); 
+   } else if (strncmp(request.sitem1,"html",4)==0) {
+    jsonlen=buildhtml(jsonreply,&request); 
+   } else {
+    jsonlen=buildhtml(jsonreply,&request);
+   }
+   send(m->sock, jsonreply, jsonlen, 0);
   }
-  send(m->sock, jsonreply, jsonlen, 0);
- }
  close(m->sock);
  free(m);
  m=NULL;
