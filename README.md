@@ -43,13 +43,17 @@ restit lets you create custom monitoring sensors by wrapping simple scripts (bas
 4. Build the application and create the installer package:
    ```bash
    make
-   make bundle
    ```
 
 5. Install on your Linux hosts (as root):
+
    ```bash
    sudo ./restit.DebianGNULinux13trixie.unknown.20260412.sh
    ```
+
+
+   Or install the generated .rpm or .deb package
+
 
 6. Query the API:
    ```bash
