@@ -19,24 +19,35 @@ int CreateTCPServerSocket(int port)
 {
  int sock;                        /* socket to create */
  struct sockaddr_in ServAddr; /* Local address */
+ int reuse=1;
 
  /* Create socket for incoming connections */
  if ((sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
   return -1;
-      
+     
  /* Construct local address structure */
  memset(&ServAddr, 0, sizeof(ServAddr));   /* Zero out structure */
  ServAddr.sin_family = AF_INET;                /* Internet address family */
  ServAddr.sin_addr.s_addr = htonl(INADDR_ANY); /* Any incoming interface */
  ServAddr.sin_port = htons(port);              /* Local port */
 
+ /* Allow socket to be reused immediately */
+ if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) < 0) {
+  close(sock);
+  return -1;
+ }
+
  /* Bind to the local address */
- if (bind(sock, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0)
+ if (bind(sock, (struct sockaddr *) &ServAddr, sizeof(ServAddr)) < 0) {
+  close(sock);
   return -2;
+ }
 
  /* Mark the socket so it will listen for incoming connections */
- if (listen(sock, MAXPENDING) < 0)
+ if (listen(sock, MAXPENDING) < 0) {
+  close(sock);
   return -3;
+ }
 
  return sock;
 }
@@ -83,11 +94,14 @@ void * tcpd_daemon(void *p) {
     pthread_create(&thr, NULL, t->hand, m);
     pthread_detach(thr);
     usleep(1000);
+    if (stopsrc) break;
     c=AcceptTCPConnection(s);
    }
    close(s);
+   if (stopsrc) break;
    sleep(2);
   }
  }
+ return NULL;
 }
 

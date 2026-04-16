@@ -9,6 +9,7 @@ restit application main c file
 #include "entropy.h"
 #include "inifind.h"
 #include "tcpd.h"
+#include <signal.h>
 
 #define TCP_BUF_SIZE 65536
 
@@ -505,7 +506,18 @@ int buildhtml(unsigned char * htmlout,httpreq *request) {
      }
     }
     if (maxwidth_msg<7) maxwidth_msg=7;
-    len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;}table{border-collapse:collapse;width:100%%;max-width:1600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}th,td{padding:16px;text-align:left;border-bottom:1px solid #eee;}th{background:#6366f1;color:#fff;font-weight:600;position:sticky;top:0;}tr:hover{background:#f8fafc;}tr:nth-child(even){background:#fafafa;}td{font-size:14px;}tr:hover td{background:#f0f2ff;}@media(max-width:768px){table{display:block;overflow-x:auto;}}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}</style></head><body><h1>📊 restit Sensor Data</h1><table><thead><tr><th width='12%%'>Category</th><th width='12%%'>Type</th><th width='22%%'>Name</th><th width='12%%'>Value</th><th width='42%%'>Message</th></tr></thead><tbody>");
+     unsigned char searchval[64];
+      unsigned char searchform[512];
+      unsigned char actionurl[256];
+      if (request->sitem2[0]==0) {
+       snprintf(actionurl,256,"/html/");
+      } else {
+       snprintf(actionurl,256,"/html/%s/",request->sitem2);
+      }
+      strncpy(searchval,request->search,64);
+      searchval[63]=0;
+      snprintf(searchform,512,"<form method='get' action='%s' style='margin:0;display:inline-block;'><input type='text' class='search-input' placeholder='Search...' value='%s' onkeypress='if(event.key===\"Enter\"){document.getElementById(\"searchHidden\").value=this.value;this.form.submit();}'><input type='hidden' name='search' id='searchHidden' value='%s'></form>",actionurl,searchval,request->search);
+     len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;font-size:24px;text-align:center;}table{border-collapse:collapse;width:100%%;max-width:1600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}th,td{padding:12px 8px;text-align:left;border-bottom:1px solid #eee;}th{background:#6366f1;color:#fff;font-weight:600;position:sticky;top:0;}tr:hover{background:#f8fafc;}tr:nth-child(even){background:#fafafa;}td{font-size:13px;}tr:hover td{background:#f0f2ff;}@media(max-width:768px){table{display:block;overflow-x:auto;}}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}.search-container{float:right;}.search-input{padding:8px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;width:180px;max-width:200px;outline:none;transition:border-color 0.2s;}.search-input:focus{border-color:#6366f1;}.th-message{display:flex;justify-content:space-between;align-items:center;border-style:none;}</style></head><body><h1>📊 restit Sensor Data</h1><table><thead><tr><th width='12%%'>Category</th><th width='12%%'>Type</th><th width='22%%'>Name</th><th width='12%%'>Value</th><th width='*' class='th-message'><div>Message</div><div>%s</div></th></tr></thead><tbody>",searchform);
     pos+=len;
     htmlpnt+=len;
     for(n=0;n<schedc;n++) {
@@ -609,11 +621,32 @@ int str2httpreq(unsigned char * str, httpreq * request) {
      strncpy(request->warnon,c2,64);
      request->warnon[63]=0;
    } else if (strncmp(c1,"criton",16)==0) {
-     strncpy(request->criton,c2,64);
-     request->warnon[63]=0;
-   } else if (strncmp(c1,"search",16)==0) {
-     strncpy(request->search,c2,64);
-     request->search[63]=0;
+ strncpy(request->criton,c2,64);
+      request->warnon[63]=0;
+    } else if (strncmp(c1,"search",16)==0) {
+      unsigned char *src=c2,*dst=request->search;
+      int i=0;
+      while (*src && i<63) {
+       if (*src=='%') {
+        src++;
+        if (*src>='0' && *src<='9') *dst=(*src-'0')<<4;
+        else if (*src>='a' && *src<='f') *dst=(*src-'a'+10)<<4;
+        else if (*src>='A' && *src<='F') *dst=(*src-'A'+10)<<4;
+        src++;
+        if (*src>='0' && *src<='9') *dst|=(*src-'0');
+        else if (*src>='a' && *src<='f') *dst|=(*src-'a'+10);
+        else if (*src>='A' && *src<='F') *dst|=(*src-'A'+10);
+        src++;
+       } else if (*src=='+') {
+        *dst=' ';
+        src++;
+       } else {
+        *dst=*src;
+        src++;
+       }
+       dst++; i++;
+      }
+      *dst=0;
    }
   }
   if (request->warnhigh>999999999999) {request->warnhigh=request->crithigh;}
@@ -657,32 +690,40 @@ void * http_handler(void *p) {
 
  tcpcc *m=(tcpcc*)p;
 
- if (p==NULL) return NULL;
+  if (p==NULL) return NULL;
 
- pthread_detach(pthread_self());
- l=recv(m->sock, buf, TCP_BUF_SIZE, 0);
- str2httpreq(buf,&request);
- if(strncmp(request.method,"GET",16)==0)
-  {
-   if (strncmp(request.sitem1,"test",4)==0) {
-    strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><pre>HTTP test request</pre></body></html>\n",256);
-    jsonlen=strnlen(jsonreply,256);
-   } else if (strncmp(request.sitem1,"json",4)==0) {
-    jsonlen=buildprtg(jsonreply,&request); 
-   } else if (strncmp(request.sitem1,"prtg",4)==0) {
-    jsonlen=buildprtg(jsonreply,&request); 
-   } else if (strncmp(request.sitem1,"text",4)==0) {
-    jsonlen=buildtext(jsonreply,&request); 
-   } else if (strncmp(request.sitem1,"html",4)==0) {
-    jsonlen=buildhtml(jsonreply,&request); 
-   } else {
-    jsonlen=buildhtml(jsonreply,&request);
+  pthread_detach(pthread_self());
+  l=recv(m->sock, buf, TCP_BUF_SIZE, 0);
+  str2httpreq(buf,&request);
+  if(strncmp(request.method,"GET",16)==0)
+   {
+    if (strncmp(request.sitem1,"test",4)==0) {
+     strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<html><body><pre>HTTP test request</pre></body></html>\n",256);
+     jsonlen=strnlen(jsonreply,256);
+    } else if (strncmp(request.sitem1,"json",4)==0) {
+     jsonlen=buildprtg(jsonreply,&request); 
+    } else if (strncmp(request.sitem1,"prtg",4)==0) {
+     jsonlen=buildprtg(jsonreply,&request); 
+    } else if (strncmp(request.sitem1,"text",4)==0) {
+     jsonlen=buildtext(jsonreply,&request); 
+    } else if (strncmp(request.sitem1,"html",4)==0) {
+     jsonlen=buildhtml(jsonreply,&request); 
+    } else if (*request.sitem1==0) {
+     strncpy(jsonreply,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><script>location.href='/html';</script></head><body></body></html>\n",256);
+     jsonlen=strnlen(jsonreply,256);
+    } else {
+     jsonlen=buildhtml(jsonreply,&request);
+    }
+    send(m->sock, jsonreply, jsonlen, 0);
    }
-   send(m->sock, jsonreply, jsonlen, 0);
-  }
  close(m->sock);
  free(m);
  m=NULL;
+}
+
+void sighandler(int sig) {
+    (void)sig;
+    stopsrc=1;
 }
 
 int main(int argc, char ** argv) {
@@ -707,7 +748,11 @@ int main(int argc, char ** argv) {
 
     const char *envpath = getenv("RESTIT_SVCNAME");
 
-    strncpy(restit_cmd,argv[0],256);
+     signal(SIGINT,sighandler);
+     signal(SIGTERM,sighandler);
+     signal(SIGPIPE,SIG_IGN);
+
+     strncpy(restit_cmd,argv[0],256);
 
     if (envpath==NULL) {
      snprintf(basepath,256,"%s/.restit", getpwuid(getuid())->pw_dir);
@@ -809,7 +854,15 @@ int main(int argc, char ** argv) {
     pthread_detach(thr_http);
 
     while (!stopsrc) {
-        sleep(30);
+        sleep(1);
+    }
+
+    pthread_cancel(thr_http);
+    pthread_join(thr_http,NULL);
+    
+    for(n=0;n<schedc;n++) {
+        pthread_cancel(scheds[n]->thread);
+        pthread_join(scheds[n]->thread,NULL);
     }
 
     pthread_exit(0);

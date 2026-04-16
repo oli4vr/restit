@@ -5,6 +5,8 @@ typedef struct _tcpcc {
  void * data;
 } tcpcc;
 
+extern unsigned char stopsrc;
+
 typedef struct _tcpd {
  void * (*hand)(void*);
  void * data;
