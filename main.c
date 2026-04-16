@@ -487,25 +487,25 @@ int buildtext(unsigned char * textout,httpreq *request) {
 }
 
 int buildhtml(unsigned char * htmlout,httpreq *request) {
-    int n,m,max,pos=0,len;
-    unsigned char * htmlpnt=htmlout;
-    cmdsched * c;
-    unsigned char trclass[16];
-    int maxwidth_cat=8,maxwidth_type=8,maxwidth_name=16,maxwidth_val=8,maxwidth_msg=32;
-    for(n=0;n<schedc;n++) {
-     c=scheds[n];
-     max=(c->resultsnum)-1;
-     for(m=0;m<(c->resultsnum);m++) {
-      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
-       if (strlen(c->vault)>maxwidth_cat) maxwidth_cat=strlen(c->vault);
-       if (strlen(c->keystring)>maxwidth_type) maxwidth_type=strlen(c->keystring);
-       if (strlen(c->results[m].result_string)>maxwidth_name) maxwidth_name=strlen(c->results[m].result_string);
-       if (strlen(c->results[m].result_value)>maxwidth_val) maxwidth_val=strlen(c->results[m].result_value);
-       if (strlen(c->results[m].result_message)>maxwidth_msg) maxwidth_msg=strlen(c->results[m].result_message);
+     int n,m,max,pos=0,len;
+     unsigned char * htmlpnt=htmlout;
+     cmdsched * c;
+     unsigned char trclass[16];
+     int maxwidth_cat=8,maxwidth_type=8,maxwidth_name=16,maxwidth_val=8,maxwidth_msg=32;
+     for(n=0;n<schedc;n++) {
+      c=scheds[n];
+      max=(c->resultsnum)-1;
+      for(m=0;m<(c->resultsnum);m++) {
+       if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+        if (strlen(c->vault)>maxwidth_cat) maxwidth_cat=strlen(c->vault);
+        if (strlen(c->keystring)>maxwidth_type) maxwidth_type=strlen(c->keystring);
+        if (strlen(c->results[m].result_string)>maxwidth_name) maxwidth_name=strlen(c->results[m].result_string);
+        if (strlen(c->results[m].result_value)>maxwidth_val) maxwidth_val=strlen(c->results[m].result_value);
+        if (strlen(c->results[m].result_message)>maxwidth_msg) maxwidth_msg=strlen(c->results[m].result_message);
+       }
       }
      }
-    }
-    if (maxwidth_msg<7) maxwidth_msg=7;
+     if (maxwidth_msg<7) maxwidth_msg=7;
      unsigned char searchval[64];
       unsigned char searchform[512];
       unsigned char actionurl[256];
@@ -517,33 +517,33 @@ int buildhtml(unsigned char * htmlout,httpreq *request) {
       strncpy(searchval,request->search,64);
       searchval[63]=0;
       snprintf(searchform,512,"<form method='get' action='%s' style='margin:0;display:inline-block;'><input type='text' class='search-input' placeholder='Search...' value='%s' onkeypress='if(event.key===\"Enter\"){document.getElementById(\"searchHidden\").value=this.value;this.form.submit();}'><input type='hidden' name='search' id='searchHidden' value='%s'></form>",actionurl,searchval,request->search);
-     len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;font-size:24px;text-align:center;}table{border-collapse:collapse;width:100%%;max-width:1600px;margin:0 auto;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}th,td{padding:12px 8px;text-align:left;border-bottom:1px solid #eee;}th{background:#6366f1;color:#fff;font-weight:600;position:sticky;top:0;}tr:hover{background:#f8fafc;}tr:nth-child(even){background:#fafafa;}td{font-size:13px;}tr:hover td{background:#f0f2ff;}@media(max-width:768px){table{display:block;overflow-x:auto;}}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}.search-container{float:right;}.search-input{padding:8px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;width:180px;max-width:200px;outline:none;transition:border-color 0.2s;}.search-input:focus{border-color:#6366f1;}.th-message{display:flex;justify-content:space-between;align-items:center;border-style:none;}</style></head><body><h1>📊 restit Sensor Data</h1><table><thead><tr><th width='12%%'>Category</th><th width='12%%'>Type</th><th width='22%%'>Name</th><th width='12%%'>Value</th><th width='*' class='th-message'><div>Message</div><div>%s</div></th></tr></thead><tbody>",searchform);
-    pos+=len;
-    htmlpnt+=len;
-    for(n=0;n<schedc;n++) {
-     c=scheds[n];
-     max=(c->resultsnum)-1;
-     for(m=0;m<(c->resultsnum);m++) {
-      if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
-       if ((n+m)%2==0) strncpy(trclass,"odd",16);
-       else strncpy(trclass,"even",16);
-       len=sprintf(htmlpnt,"<tr class='%s'><td>%s</td><td><span style='color:#64748b'>%s</span></td><td><strong>%s</strong></td><td><code>%s</code></td><td>%s</td></tr>",trclass,c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
-       pos+=len;
-       htmlpnt+=len;
-      }
-     }
-    }
-    len=sprintf(htmlpnt,"</tbody></table>");
-    pos+=len;
-    htmlpnt+=len;
-    if (schedc==0) {
-     len=sprintf(htmlpnt,"<p class='empty'>No sensor data available</p>");
+     len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;font-size:24px;text-align:center;}.restit-container{width:100%%;max-width:1600px;margin:0 auto;}.restit-header{background:#6366f1!important;color:#fff;font-weight:600;border-radius:12px 12px 0 0;overflow:hidden;}.restit-row{display:flex;background:#fff;border-bottom:1px solid #eee;align-items:center;}.restit-header .restit-row{background:#6366f1!important;color:#fff;position:sticky;top:0;z-index:10;}.restit-cell{padding:12px 8px;flex:1;min-width:0;}.restit-cell-category{flex:0 0 12%%;}.restit-cell-type{flex:0 0 12%%;}.restit-cell-name{flex:0 0 22%%;}.restit-cell-value{flex:0 0 12%%;}.restit-cell-message{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;}.restit-cell-message>div{flex:1;}.restit-content{max-height:60vh;overflow-y:auto;}.restit-row:hover{background:#f8fafc;}.restit-row:nth-child(even){background:#fafafa;}.restit-row:nth-child(odd){background:#fff;}.restit-row:hover:nth-child(even){background:#f0f2ff;}.restit-row:hover:nth-child(odd){background:#f0f2ff;}.restit-header .restit-row:hover,.restit-header .restit-row:hover:nth-child(even){background:#6366f1!important;}.restit-cell span{color:#64748b;}.restit-cell strong{font-weight:600;}.restit-cell code{font-family:monospace;background:#f1f5f9;padding:2px 4px;border-radius:4px;}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}.search-container{float:right;}.search-input{padding:8px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;width:180px;max-width:200px;outline:none;transition:border-color 0.2s;}.search-input:focus{border-color:#6366f1;}</style></head><body><h1>📊 restit Sensor Data</h1><div class='restit-container'><div class='restit-header'><div class='restit-row'><div class='restit-cell restit-cell-category'>Category</div><div class='restit-cell restit-cell-type'>Type</div><div class='restit-cell restit-cell-name'>Name</div><div class='restit-cell restit-cell-value'>Value</div><div class='restit-cell restit-cell-message'><div>Message</div><div style='position:absolute;right:6px;'>%s</div></div></div></div><div class='restit-content'>",searchform);
      pos+=len;
      htmlpnt+=len;
-    }
-    len=sprintf(htmlpnt,"</body></html>");
-    pos+=len;
-    return pos;
+     for(n=0;n<schedc;n++) {
+      c=scheds[n];
+      max=(c->resultsnum)-1;
+      for(m=0;m<(c->resultsnum);m++) {
+       if ((*(request->sitem2)==0 || strncmp(request->sitem2,c->results[m].result_string,64) == 0 || strncmp(request->sitem2,c->vault,64)==0 || strncmp(request->sitem2,c->keystring,64)==0) && (strstr(c->results[m].result_string,request->search)!=NULL || request->search[0]==0)) {
+        if ((n+m)%2==0) strncpy(trclass,"odd",16);
+        else strncpy(trclass,"even",16);
+        len=sprintf(htmlpnt,"<div class='restit-row'><div class='restit-cell restit-cell-category'>%s</div><div class='restit-cell restit-cell-type'><span>%s</span></div><div class='restit-cell restit-cell-name'><strong>%s</strong></div><div class='restit-cell restit-cell-value'><code>%s</code></div><div class='restit-cell restit-cell-message'>%s</div></div>",c->vault,c->keystring,c->results[m].result_string,c->results[m].result_value,c->results[m].result_message);
+        pos+=len;
+        htmlpnt+=len;
+       }
+      }
+     }
+     len=sprintf(htmlpnt,"</div></div>");
+     pos+=len;
+     htmlpnt+=len;
+     if (schedc==0) {
+      len=sprintf(htmlpnt,"<p class='empty'>No sensor data available</p>");
+      pos+=len;
+      htmlpnt+=len;
+     }
+     len=sprintf(htmlpnt,"</body></html>");
+     pos+=len;
+     return pos;
 }
 
 //Process the http header and determine method and path
