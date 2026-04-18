@@ -12,7 +12,7 @@ cp restit.cfg .${RESTIT_SVCNAME}/
 tar -c bin/restit .${RESTIT_SVCNAME} env_vars.sh | gzip -9c > pkg.tgz
 tar -ztv < pkg.tgz
 
-cp bundle.sh ${PKGNAM}
+cp build_scripts/bundle.sh ${PKGNAM}
 base64 <pkg.tgz | sed -e 's/^/#B64#/' >>${PKGNAM}
 
 rm pkg.tgz

@@ -198,14 +198,15 @@ int exec_sched(cmdsched * c) {
     int rc;
     //unsigned char buffer[MESSAGE_SIZE+1]={0};
     unsigned char buffer[65535]={0};
-    unsigned char cmdstr[256]={0};
+    unsigned char cmdstr[512]={0};
     unsigned char *sp=buffer;
     unsigned char neof=1,nomsg=1;
     unsigned char *rcstr, *outstr, *outmsg;
 
     FILE * pipe;
 
-    rc=sprintf(cmdstr,"%s run %s </dev/null\n",restit_cmd,c->scriptname);
+    rc=snprintf(cmdstr,512,"%s run %s </dev/null\n",restit_cmd,c->scriptname);
+    cmdstr[511]=0;
 
 //    pipe=popen(c->commands,"r");
     pipe=popen(cmdstr,"r");
@@ -507,7 +508,7 @@ int buildhtml(unsigned char * htmlout,httpreq *request) {
      }
      if (maxwidth_msg<7) maxwidth_msg=7;
      unsigned char searchval[64];
-      unsigned char searchform[512];
+      unsigned char searchform[1024];
       unsigned char actionurl[256];
       if (request->sitem2[0]==0) {
        snprintf(actionurl,256,"/html/");
@@ -516,8 +517,9 @@ int buildhtml(unsigned char * htmlout,httpreq *request) {
       }
       strncpy(searchval,request->search,64);
       searchval[63]=0;
-      snprintf(searchform,512,"<form method='get' action='%s' style='margin:0;display:inline-block;'><input type='text' class='search-input' placeholder='Search...' value='%s' onkeypress='if(event.key===\"Enter\"){document.getElementById(\"searchHidden\").value=this.value;this.form.submit();}'><input type='hidden' name='search' id='searchHidden' value='%s'></form>",actionurl,searchval,request->search);
-     len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:20px;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;font-size:24px;text-align:center;}.restit-container{width:100%%;max-width:1600px;margin:0 auto;}.restit-header{background:#6366f1!important;color:#fff;font-weight:600;border-radius:12px 12px 0 0;overflow:hidden;}.restit-row{display:flex;background:#fff;border-bottom:1px solid #eee;align-items:center;}.restit-header .restit-row{background:#6366f1!important;color:#fff;position:sticky;top:0;z-index:10;}.restit-cell{padding:12px 8px;flex:1;min-width:0;}.restit-cell-category{flex:0 0 12%%;}.restit-cell-type{flex:0 0 10%%;}.restit-cell-name{flex:0 0 35%%;}.restit-cell-value{flex:0 0 6%%;}.restit-cell-message{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;}.restit-cell-message>div{flex:1;}.restit-content{max-height:60vh;overflow-y:auto;}.restit-row:hover{background:#f8fafc;}.restit-row:nth-child(even){background:#fafafa;}.restit-row:nth-child(odd){background:#fff;}.restit-row:hover:nth-child(even){background:#f0f2ff;}.restit-row:hover:nth-child(odd){background:#f0f2ff;}.restit-header .restit-row:hover,.restit-header .restit-row:hover:nth-child(even){background:#6366f1!important;}.restit-cell span{color:#64748b;}.restit-cell strong{font-weight:600;}.restit-cell code{font-family:monospace;background:#f1f5f9;padding:2px 4px;border-radius:4px;}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}.search-container{float:right;}.search-input{padding:8px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;width:180px;max-width:200px;outline:none;transition:border-color 0.2s;}.search-input:focus{border-color:#6366f1;}</style></head><body><h1>📊 restit Sensor Data</h1><div class='restit-container'><div class='restit-header'><div class='restit-row'><div class='restit-cell restit-cell-category'>Category</div><div class='restit-cell restit-cell-type'>Type</div><div class='restit-cell restit-cell-name'>Name</div><div class='restit-cell restit-cell-value'>Value</div><div class='restit-cell restit-cell-message'><div>Message</div><div style='position:absolute;right:6px;'>%s</div></div></div></div><div class='restit-content'>",searchform);
+      snprintf(searchform,1024,"<form method='get' action='%s' style='margin:0;display:inline-block;'><input type='text' class='search-input' placeholder='Search...' value='%s' onkeypress='if(event.key===\"Enter\"){document.getElementById(\"searchHidden\").value=this.value;this.form.submit();}'><input type='hidden' name='search' id='searchHidden' value='%s'></form>",actionurl,searchval,request->search);
+      searchform[1023]=0;
+     len=sprintf(htmlpnt,"HTTP/1.1 200 OK\nContent-Type: text/html\n\n<!DOCTYPE html><html><head><meta charset='UTF-8'><meta name='viewport' content='width=device-width, initial-scale=1.0'><title>restit - Sensor Data</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto, Oxygen,Ubuntu,Cantarell,sans-serif;margin:0;padding:0;background:#f5f7fa;color:#333;}h1{margin-bottom:20px;font-size:24px;text-align:center;}.restit-container{width:100%%;max-width:1600px;margin:0 auto;display:flex;flex-direction:column;}.restit-header{background:#6366f1!important;color:#fff;font-weight:600;border-radius:12px 12px 0 0;overflow:hidden;flex-shrink:0;}.restit-row{display:flex;background:#fff;border-bottom:1px solid #eee;align-items:center;}.restit-header .restit-row{background:#6366f1!important;color:#fff;position:sticky;top:0;z-index:10;}.restit-cell{padding:12px 8px;flex:1;min-width:0;}.restit-cell-category{flex:0 0 12%%;}.restit-cell-type{flex:0 0 10%%;}.restit-cell-name{flex:0 0 35%%;}.restit-cell-value{flex:0 0 6%%;}.restit-cell-message{flex:1;min-width:0;display:flex;justify-content:space-between;align-items:center;}.restit-cell-message>div{flex:1;}.restit-content{height:90vh;overflow-y:auto;}.restit-row:hover{background:#f8fafc;}.restit-row:nth-child(even){background:#fafafa;}.restit-row:nth-child(odd){background:#fff;}.restit-row:hover:nth-child(even){background:#f0f2ff;}.restit-row:hover:nth-child(odd){background:#f0f2ff;}.restit-header .restit-row:hover,.restit-header .restit-row:hover:nth-child(even){background:#6366f1!important;}.restit-cell span{color:#64748b;}.restit-cell strong{font-weight:600;}.restit-cell code{font-family:monospace;background:#f1f5f9;padding:2px 4px;border-radius:4px;}.empty{padding:60px 20px;text-align:center;color:#64748b;font-size:16px;}.search-container{float:right;}.search-input{padding:8px 12px;font-size:13px;border:1px solid #ddd;border-radius:6px;width:180px;max-width:200px;outline:none;transition:border-color 0.2s;}.search-input:focus{border-color:#6366f1;}</style></head><body><h1>📊 restit Sensor Data</h1><div class='restit-container'><div class='restit-header'><div class='restit-row'><div class='restit-cell restit-cell-category'>Category</div><div class='restit-cell restit-cell-type'>Type</div><div class='restit-cell restit-cell-name'>Name</div><div class='restit-cell restit-cell-value'>Value</div><div class='restit-cell restit-cell-message'><div>Message</div><div style='position:absolute;right:6px;'>%s</div></div></div></div><div class='restit-content'>",searchform);
      pos+=len;
      htmlpnt+=len;
      for(n=0;n<schedc;n++) {

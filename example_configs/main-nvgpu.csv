@@ -1,0 +1,2 @@
+performance;system;1;mon_scripts/perfstats.sh;/usr/bin/bash;
+performance;gpuadv;1;mon_scripts/nvgpu_stats.sh;/usr/bin/bash;

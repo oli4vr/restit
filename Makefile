@@ -12,8 +12,8 @@ main:
 bundle:
 	mkdir -p ~/bin 2>/dev/null
 	RESTIT_SVCNAME=$(SVCNAME) ./restit -b main.csv
-	chmod +x ./genpkg.sh
-	./genpkg.sh
-	./genrpm.sh
+	chmod +x ./build_scripts/genpkg.sh
+	./build_scripts/genpkg.sh
+	./build_scripts/genrpm.sh
 clean:
-	./cleanup.sh
+	./build_scripts/cleanup.sh
