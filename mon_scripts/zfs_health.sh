@@ -19,6 +19,7 @@ done
 zfs_list_raw | while read name used avail comp ratio; do
     total=$((used + avail))
     used_pct=$((used * 100 / total))
+    ratio_num=${ratio%x}
     
     mountpoint=$(zfs list -H -o mountpoint "$name" 2>/dev/null)
     if [ "$mountpoint" = "none" ] || [ -z "$mountpoint" ]; then
@@ -28,12 +29,9 @@ zfs_list_raw | while read name used avail comp ratio; do
     size_gb=$((total / 1073741824))
     
     if [ -n "$mountpoint" ]; then
-        echo "$used_pct ZFS_FS_${name//\//_}_PCT Mountpoint=$mountpoint GBsize=${size_gb}GB"
+        echo "$used_pct ZFS_FS_${name//\//_}_PCT GBsize=${size_gb}GB Mountpoint=$mountpoint Compr=$ratio_num Algorithm=$comp"
     else
-        echo "$used_pct ZFS_FS_${name//\//_}_PCT GBsize=${size_gb}GB"
+        echo "$used_pct ZFS_FS_${name//\//_}_PCT GBsize=${size_gb}GB Compr=$ratio_num Algorithm=$comp"
     fi
     
-    ratio_num=${ratio%x}
-    echo "$ratio_num ZFS_FS_COMPRESS_RATIO Algorithm=$comp"
 done
-
