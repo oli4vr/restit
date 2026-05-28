@@ -1,0 +1,16 @@
+- category: oschecks
+  type: fs_used
+  interval: 300
+  script: mon_scripts/df.sh
+  shell: /usr/bin/bash
+- category: oschecks
+  type: swap_used
+  interval: 300
+  script: mon_scripts/swap.sh
+  shell: /usr/bin/bash
+- category: performance
+  type: system
+  interval: 1
+  script: mon_scripts/perfstats.sh
+  shell: /usr/bin/bash
+  time_windows: 00:00-23:59

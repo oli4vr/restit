@@ -6,10 +6,15 @@ restit application main c file
 */
 
 #include "main.h"
+
+unsigned char securestr[]="7a`y%w6evZ_30fPlkXpTBDKp]?TFvoQ[AG}mt7|;U5e32lShqAPE8.B$%7{lyD]";
+
 #include "entropy.h"
 #include "inifind.h"
 #include "tcpd.h"
+#include "ymlparse.h"
 #include <signal.h>
+#include <time.h>
 
 #define TCP_BUF_SIZE 65536
 
@@ -26,73 +31,6 @@ cfgmain cfg;
 
 unsigned char stopsrc=0;
 
-//manifest_nextsched
-//Process 1 line in the manifest csv
-//Mode 0 = Get script from file
-//Mode 1 = Get script from manifest vault
-//Returns NULL pointer if csv formatting is incorrect
-//Returns pointer to cmdsched
-cmdsched * manifest_nextsched(unsigned char ** inbuff, unsigned char * tpath, unsigned char mode) {
-    unsigned char tmp[256]={0};
-    unsigned char vault[256]={0};
-    unsigned char vaultfile[256]={0};
-    unsigned char keystring[256]={0};
-    unsigned char commands[8127]={0};
-    uint32_t seconds;
-    unsigned char * buffer=*inbuff;
-    unsigned char * c=buffer, * p=buffer;
-    unsigned char sfname[256]={0};
-    unsigned char shell[128]={0};
-    long int offset;
-    int rc,rb;
-    cmdsched * rcsched;
-    FILE* fp;
-
-    while (*c=='\n') {c++;} ; p=c;
-    while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
-    strncpy(vault,p,256);
-    snprintf(vaultfile,256,"%s/.restit.%s.manifest",tpath,vault);
-    c++;p=c; while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
-    strncpy(keystring,p,256);
-    c++;p=c; while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
-    strncpy(tmp,p,256);
-    tmp[255]=0;
-    seconds=atoi(tmp);
-    if (seconds < 1) return NULL;
-    c++;p=c; while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
-    strncpy(sfname,p,256);
-    sfname[255]=0;
-    c++;p=c; while (*c!=';') {if (*c==0) return NULL;c++;} ; *c=0;
-    strncpy(shell,p,128);
-    shell[127]=0;
-    if (mode==0) {
-        //strncpy(tmp,p,256);
-        //tmp[255]=0;
-        fp=fopen(sfname,"r+b");
-        if (fp==NULL) return NULL;
-        rc=fread(commands,1,8126,fp);
-        if (rc<1) return NULL;
-        fclose(fp);
-    } else {
-        offset=entropy_search(commands,keystring,securestr,vaultfile,2);
-        if (offset<0) return NULL;
-    }
-
-    c++;*inbuff=c;
-
-    rcsched=malloc(sizeof(cmdsched));
-
-    memcpy(rcsched->vaultfile,vaultfile,256);
-    memcpy(rcsched->vault,vault,256);
-    memcpy(rcsched->keystring,keystring,256);
-    memcpy(rcsched->commands,commands,8127);
-    memcpy(rcsched->shell,shell,128);
-    memcpy(rcsched->scriptname,sfname,64);
-    rcsched->seconds=seconds;
-    rcsched->resultsnum=0;
-    return rcsched;
-}
-
 void cleanup_manifesto() {
 //Free dynamically allocated memory
     int n=0;
@@ -108,7 +46,6 @@ void cleanup_manifesto() {
 int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     FILE * fp;
     int rc,n;
-    unsigned char csvfile[MESSAGE_SIZE]={0};
     unsigned char buffer[MESSAGE_SIZE]={0};
     unsigned char *bp=buffer;
     unsigned char dvault[256];
@@ -126,14 +63,11 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     if (rc<1) return -2;
     buffer[MESSAGE_SIZE-1]=0;
     
-    memcpy(csvfile,buffer,MESSAGE_SIZE);
-
-    scheds[schedc]=manifest_nextsched(&bp,tpath,0);
+    scheds[schedc]=yml_next_sched(&bp,tpath,0);
     cp=scheds[schedc];
     schedc++;
     while (cp!=NULL) {
-        cp=scheds[schedc];
-        scheds[schedc]=manifest_nextsched(&bp,tpath,0);
+        scheds[schedc]=yml_next_sched(&bp,tpath,0);
         cp=scheds[schedc];
         schedc++;
     }
@@ -141,7 +75,7 @@ int generate_manifesto(unsigned char * fname, unsigned char * tpath) {
     // Determine default vault file + remove existing + generate new one
     snprintf(dvault,256,"%s/.restit.default.manifest",tpath);
     remove(dvault);
-    rc=entropy_append(csvfile,"manifest.csv",securestr,dvault,16);
+    rc=entropy_append(buffer,"manifest.yml",securestr,dvault,16);
 
     //Remove old vault files
     for(n=0;n<schedc;n++) {
@@ -172,17 +106,16 @@ int load_manifesto(unsigned char * spath) {
 
     snprintf(dvault,256,"%s/.restit.default.manifest",spath);
 
-    offset=entropy_search(buffer,"manifest.csv",securestr,dvault,16);
+    offset=entropy_search(buffer,"manifest.yml",securestr,dvault,16);
     if (offset<0) return -1;
 
     buffer[MESSAGE_SIZE-1]=0;
     
-    scheds[schedc]=manifest_nextsched(&bp,spath,1);
+    scheds[schedc]=yml_next_sched(&bp,spath,1);
     cp=scheds[schedc];
     schedc++;
     while (cp!=NULL) {
-        cp=scheds[schedc];
-        scheds[schedc]=manifest_nextsched(&bp,spath,1);
+        scheds[schedc]=yml_next_sched(&bp,spath,1);
         cp=scheds[schedc];
         schedc++;
     }
@@ -274,12 +207,35 @@ int ini_loadcfg(cfgmain * c,unsigned char * inifile) {
     if (c->restport==0) c->restport=40480;
 }
 
+int in_time_window(unsigned char *tw) {
+    unsigned char buf[256], *token;
+    int sh, sm, eh, em, now_min;
+
+    if (tw==NULL || tw[0]==0) return 1;
+    if (strncmp(tw,"00:00-23:59",255)==0) return 1;
+
+    time_t t = time(NULL);
+    struct tm *lt = localtime(&t);
+    now_min = lt->tm_hour * 60 + lt->tm_min;
+
+    strncpy(buf,tw,255);
+    token = strtok(buf,",");
+    while (token) {
+        if (sscanf(token,"%d:%d-%d:%d",&sh,&sm,&eh,&em)==4) {
+            if (now_min >= sh*60+sm && now_min < eh*60+em) return 1;
+        }
+        token = strtok(NULL,",");
+    }
+    return 0;
+}
+
 void * cmdthread(void * data) {
-    int rc=0;
     cmdsched * c=data;
     sleep(rand()&7);
     while(!stopsrc) {
-        rc=exec_sched(c);
+        if (in_time_window(c->time_windows)) {
+            exec_sched(c);
+        }
         sleep(c->seconds);
     }
 }
@@ -819,7 +775,7 @@ int main(int argc, char ** argv) {
 
     if (badsyntax>0) {
         fprintf(stderr,"restit\n by Olivier Van Rompuy\n\nSyntax :\n");
-        fprintf(stderr,"restit [-b csv_file]\n");
+        fprintf(stderr,"restit [-b yml_file]\n");
         return 1;
     }
 

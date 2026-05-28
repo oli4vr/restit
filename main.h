@@ -1,3 +1,6 @@
+#ifndef MAIN_H
+#define MAIN_H
+
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,7 +19,7 @@
 
 #define MAX_RESULTS 1024
 
-unsigned char securestr[]="7a`y%w6evZ_30fPlkXpTBDKp]?TFvoQ[AG}mt7|;U5e32lShqAPE8.B$%7{lyD]";
+extern unsigned char securestr[];
 
 // Results are stored in a struct with 2 strings : string & value
 typedef struct _result_record {
@@ -33,7 +36,8 @@ typedef struct _cmdsched {
  unsigned char scriptname[64];
  unsigned char shell[128];
  unsigned char commands[8127];
- result_record results[MAX_RESULTS];
+ unsigned char time_windows[256];
+  result_record results[MAX_RESULTS];
  unsigned int resultsnum;
  uint32_t seconds;
  pthread_t thread;
@@ -61,3 +65,5 @@ typedef struct _httpreq {
  unsigned char criton[64];
  unsigned char limitmode;
 } httpreq;
+
+#endif

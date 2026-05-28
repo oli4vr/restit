@@ -1,0 +1,10 @@
+- category: performance
+  type: system
+  interval: 1
+  script: mon_scripts/perfstats.sh
+  shell: /usr/bin/bash
+- category: performance
+  type: gpuadv
+  interval: 1
+  script: mon_scripts/nvgpu_stats.sh
+  shell: /usr/bin/bash

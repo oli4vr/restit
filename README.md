@@ -33,11 +33,18 @@ restit lets you create custom monitoring sensors by wrapping simple scripts (bas
    df -m | grep '^/' | tr -d '%' | awk '{print $5,$6}'
    ```
 
-3. Edit `main.csv` to add your sensors:
-   ```
-   Category;Type;schedule_frequency_seconds;script_file;shell_exe;
-   oschecks;disk_usage;300;df.sh;/usr/bin/bash;
-   oschecks;cpu_stats;60;cpu.sh;/usr/bin/bash;
+3. Edit `main.yml` to add your sensors:
+   ```yaml
+   - category: oschecks
+     type: disk_usage
+     interval: 300
+     script: df.sh
+     shell: /usr/bin/bash
+   - category: oschecks
+     type: cpu_stats
+     interval: 60
+     script: cpu.sh
+     shell: /usr/bin/bash
    ```
 
 4. Build the application and create the installer package:
@@ -63,17 +70,41 @@ restit lets you create custom monitoring sensors by wrapping simple scripts (bas
    curl http://127.0.0.1:40480/prtg
    ```
 
-## main.csv Syntax
+## main.yml Syntax
 
-```
-Category;Type;schedule_frequency_seconds;script_file;shell_exe;
+```yaml
+- category: <group>
+  type: <sensor_type>
+  interval: <seconds>
+  script: <script_path>
+  shell: <interpreter>
+  time_windows: 00:00-23:59       # optional, default is always
 ```
 
-- **Category**: Logical grouping (e.g., `oschecks`, `network`, `application`)
-- **Type**: Sensor type within category (e.g., `disk_usage`, `cpu_stats`)
-- **schedule_frequency_seconds**: Pause in seconds between script runs
-- **script_file**: Path to your script file which will be added to the installer package
-- **shell_exe**: Shell/interpreter to execute the script (e.g., `/usr/bin/bash`, `/usr/bin/python3`, ...)
+| Field | Description |
+|-------|-------------|
+| `category` | Logical grouping (e.g., `oschecks`, `network`, `application`) |
+| `type` | Sensor type within category (e.g., `disk_usage`, `cpu_stats`) |
+| `interval` | Pause in seconds between script runs |
+| `script` | Path to your script file which will be added to the installer package |
+| `shell` | Shell/interpreter to execute the script (e.g., `/usr/bin/bash`, `/usr/bin/python3`) |
+| `time_windows` | Comma-separated `HH:MM-HH:MM` windows when the sensor is allowed to run (default `00:00-23:59`) |
+
+Additional fields may be added in future releases — unknown keys are silently ignored.
+
+### Time Windows
+
+The `time_windows` key restricts when a sensor collects data. If the current time falls outside all specified windows, the last cached result is served and the script is skipped until the next window opens.
+
+Example — only check backup logs outside the backup window:
+```yaml
+- category: backups
+  type: log_check
+  interval: 300
+  script: check_backup.sh
+  shell: /usr/bin/bash
+  time_windows: 00:00-06:00,18:00-23:59
+```
 
 ## Important Rules
 

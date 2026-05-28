@@ -1,0 +1,15 @@
+- category: performance
+  type: system
+  interval: 1
+  script: mon_scripts/perfstats.sh
+  shell: /usr/bin/bash
+- category: performance
+  type: gpubasic
+  interval: 1
+  script: mon_scripts/amdgpu_basic.sh
+  shell: /usr/bin/bash
+- category: performance
+  type: gpuadv
+  interval: 1
+  script: mon_scripts/amdgpu_advanced.sh
+  shell: /usr/bin/bash

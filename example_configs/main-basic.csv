@@ -1,3 +1,0 @@
-oschecks;fs_used;300;mon_scripts/df.sh;/usr/bin/bash;
-oschecks;swap_used;300;mon_scripts/swap.sh;/usr/bin/bash;
-performance;system;1;mon_scripts/perfstats.py;/usr/bin/python3;
